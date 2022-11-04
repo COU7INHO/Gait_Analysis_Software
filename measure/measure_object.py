@@ -12,7 +12,7 @@ detector = HomogeneousBgDetector()
 
 # Load Cap
 cap = cv2.VideoCapture(1)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # Retirar isto??
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 while True:
