@@ -1,6 +1,6 @@
 import cv2
-from video.capture_video import VideoCapture
-from video.show_window import DisplayFrames
+from start_recording.capture_video import VideoCapture
+from start_recording.show_window import DisplayFrames
 
 cameras = VideoCapture([0, 1])
 display = DisplayFrames(cameras)

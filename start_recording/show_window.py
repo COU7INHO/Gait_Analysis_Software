@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from video.capture_video import VideoCapture
+from start_recording.capture_video import VideoCapture
 
 class DisplayFrames:
     def __init__(self, VideoCaptureObject:VideoCapture):
