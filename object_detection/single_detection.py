@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 
-img = cv2.imread("/Users/tiagocoutinho/Desktop/body.png")
-template = cv2.imread("/Users/tiagocoutinho/Desktop/marker.png")
+img = cv2.imread("/Users/tiagocoutinho/Desktop/body2.png")
+template = cv2.imread("/Users/tiagocoutinho/Desktop/marker2.png")
 
 result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
 min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
