@@ -2,7 +2,7 @@ import cv2
 from start_recording.capture_video import VideoCapture
 from start_recording.show_window import DisplayFrames
 
-cameras = VideoCapture([0, 1])
+cameras = VideoCapture([0])
 display = DisplayFrames(cameras)
 
 while True:
