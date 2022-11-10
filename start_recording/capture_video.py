@@ -3,6 +3,7 @@ import imutils
 
 
 class VideoCapture:
+    
     def __init__(self, camera_indices, width=600):
         self.camera_indexes = camera_indices
         self.width = width 

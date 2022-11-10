@@ -18,7 +18,7 @@ class CalibrationImages:
 
         while camera.isOpened():
 
-            success, img = camera.read()
+            _, img = camera.read()
             k = cv2.waitKey(5)
 
             if k == 27:
@@ -35,9 +35,8 @@ class CalibrationImages:
         camera.release()
         cv2.destroyAllWindows()
         
-        return success, img
 
 mac_webcam = CalibrationImages(0, "mac_webcam" )
-iphone = CalibrationImages(1, "iphone_cam")
+ext_cam1= CalibrationImages(1, "ext_cam1")
 mac_webcam.get_images()
-iphone.get_images()
+ext_cam1.get_images()
