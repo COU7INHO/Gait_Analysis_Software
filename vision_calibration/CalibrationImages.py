@@ -1,16 +1,15 @@
 import cv2
+import os
 
-#? https://www.youtube.com/watch?v=yKypaVl6qQo
+class CalibrationImages:
 
-
-class CalibrateImages:
-
-    def __init__(self, camera_index:int, camera_name:str, path:str, image_name:str):
+    def __init__(self, camera_index:int, camera_name:str):
         self.camera_index = camera_index
-        self.camera_name = camera_name
-        self.path = path
-        self.image_name = image_name
-        
+        self.camera_name = camera_name   
+        self.path = (f"./vision_calibration/images_to_calibrate/{self.camera_name}/" )  #! Path format for MMacOS   
+        if not os.path.exists(self.path):
+              self.path = os.makedirs(f"./vision_calibration/images_to_calibrate/{self.camera_name}/")
+
     def get_images(self):
 
         camera = cv2.VideoCapture(self.camera_index)
@@ -20,14 +19,14 @@ class CalibrateImages:
         while camera.isOpened():
 
             success, img = camera.read()
-            
             k = cv2.waitKey(5)
 
             if k == 27:
                 print(f"There are {n_images} to calibrate {self.camera_name}")
                 break
+
             elif k == ord('s'): 
-                cv2.imwrite(self.path + self.image_name + str(n_images) + '.jpg', img)
+                cv2.imwrite(self.path + self.camera_name + str(n_images) + '.jpg', img)
                 print("Image saved!")
                 n_images += 1
 
@@ -38,8 +37,7 @@ class CalibrateImages:
         
         return success, img
 
-camL = CalibrateImages(0, "webcam", "./vision_calibration/images_to_calibrate/imageL/", "imgL_" )
-camR = CalibrateImages(1, "iphone", "./vision_calibration/images_to_calibrate/imageR/", "imgR_" )
-
-camL.get_images()
-camR.get_images()
+mac_webcam = CalibrationImages(0, "mac_webcam" )
+iphone = CalibrationImages(1, "iphone_cam")
+mac_webcam.get_images()
+iphone.get_images()
