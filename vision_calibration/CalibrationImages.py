@@ -3,40 +3,43 @@ import os
 
 class CalibrationImages:
 
-    def __init__(self, camera_index:int, camera_name:str):
-        self.camera_index = camera_index
-        self.camera_name = camera_name   
-        self.path = (f"./vision_calibration/images_to_calibrate/{self.camera_name}/" )  #! Path format for MMacOS   
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-
+    def __init__(self, camera_indices):
+        self.camera_indices = camera_indices
+        self.cameras = []
+        self.paths = []
+        self.camera_index = []
+        for camera_index in self.camera_indices:
+            self.camera_index.append(camera_index)
+            self.cameras.append(cv2.VideoCapture(camera_index))
+            path = f"./vision_calibration/images_to_calibrate/Camera{camera_index}/"  #! Path format for MacOS
+            if not os.path.exists(path):
+                os.makedirs(path)
+            self.paths.append(path)
+                
     def get_images(self):
+        i = 0
+        for camera in self.cameras:
+            n_images = 0
 
-        camera = cv2.VideoCapture(self.camera_index)
+            while camera.isOpened():
+                _, img = camera.read()
+                k = cv2.waitKey(5)
 
-        n_images = 0
+                if k == 27:
+                    print(f"There are {n_images} images to calibrate Camera{self.camera_index[i]}")
+                    break
 
-        while camera.isOpened():
+                elif k == ord('s'): 
+                    
+                    cv2.imwrite(self.paths[self.camera_index[i]] + "Cam" + str(self.camera_index[i]) + '_' + str(n_images) + '.jpg', img)
+                    print("Image saved!")
+                    n_images += 1
 
-            _, img = camera.read()
-            k = cv2.waitKey(5)
+                cv2.imshow('Img',img)
+            i += 1
 
-            if k == 27:
-                print(f"There are {n_images} to calibrate {self.camera_name}")
-                break
+            camera.release()
+            cv2.destroyAllWindows()
 
-            elif k == ord('s'): 
-                cv2.imwrite(self.path + self.camera_name + str(n_images) + '.jpg', img)
-                print("Image saved!")
-                n_images += 1
-
-            cv2.imshow('Img',img)
-
-        camera.release()
-        cv2.destroyAllWindows()
-        
-
-mac_webcam = CalibrationImages(0, "mac_webcam" )
-ext_cam1= CalibrationImages(1, "ext_cam1")
-mac_webcam.get_images()
-ext_cam1.get_images()
+cameras = CalibrationImages([0, 1])
+cameras.get_images()
