@@ -8,7 +8,7 @@ class CalibrationImages:
         self.camera_name = camera_name   
         self.path = (f"./vision_calibration/images_to_calibrate/{self.camera_name}/" )  #! Path format for MMacOS   
         if not os.path.exists(self.path):
-              self.path = os.makedirs(f"./vision_calibration/images_to_calibrate/{self.camera_name}/")
+            os.makedirs(self.path)
 
     def get_images(self):
 
