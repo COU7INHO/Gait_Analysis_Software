@@ -1,3 +1,7 @@
+
+#* This class is working 
+#* It doesn't open both cameras at the same time
+
 import cv2
 import os
 
@@ -30,7 +34,6 @@ class CalibrationImages:
                     break
 
                 elif k == ord('s'): 
-                    
                     cv2.imwrite(self.paths[self.camera_index[i]] + "Cam" + str(self.camera_index[i]) + '_' + str(n_images) + '.jpg', img)
                     print("Image saved!")
                     n_images += 1
@@ -40,6 +43,3 @@ class CalibrationImages:
 
             camera.release()
             cv2.destroyAllWindows()
-
-cameras = CalibrationImages([0, 1])
-cameras.get_images()
