@@ -26,11 +26,11 @@ class GetCalibrationImages:
         cam2 = cv2.VideoCapture(self.cam2_index)
 
         n_images = 0
-        while cam1.isOpened():
+        while (cam1.isOpened() and cam2.isOpened()):  #! Alterações nesta linha
             _, img1 = cam1.read()
             _, img2 = cam2.read()
 
-            k = cv2.waitKey(5)
+            k = cv2.waitKey(1)  #! Alteração nesta linha
 
             if k == 27:
                 break
