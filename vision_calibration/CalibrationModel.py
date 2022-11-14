@@ -23,7 +23,7 @@ class CalibrationModel(GetCalibrationImages):
         self.frameheight = frameheight
         self.framesize = (self.framewidth, self.frameheight)
     
-    def find_chessboard_corners(self):
+    def find_chessboard_corners(self, imshow=False):
         objp = np.zeros((self.chessboardrows * self.chessboardcols, 3), np.float32)
         objp[:,:2] = np.mgrid[0:self.chessboardrows,0:self.chessboardcols].T.reshape(-1,2)
         objp = objp * self.squaresize
@@ -57,9 +57,11 @@ class CalibrationModel(GetCalibrationImages):
 
                 cv2.drawChessboardCorners(self.imgL, self.chessboardsize, cornersL, self.retL)
                 cv2.drawChessboardCorners(self.imgR, self.chessboardsize, cornersR, self.retR)
-                imgRL = np.hstack((self.imgL, self.imgR))
-                cv2.imshow("Chessboard corners", imgRL)
-                cv2.waitKey(2000)
+                
+                if imshow == True:
+                    imgRL = np.hstack((self.imgL, self.imgR))
+                    cv2.imshow("Chessboard corners", imgRL)
+                    cv2.waitKey(2000)
 
         cv2.destroyAllWindows()
 

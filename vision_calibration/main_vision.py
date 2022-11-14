@@ -11,7 +11,6 @@ if new_images == 'Y':
     images = GetCalibrationImages(cam1, cam2)
     images.get_images()
 
-
 model = CalibrationModel(cam1, cam2, square_size)
 model.find_chessboard_corners()
 model.calibration()
