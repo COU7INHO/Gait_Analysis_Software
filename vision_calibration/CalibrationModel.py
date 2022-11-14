@@ -1,3 +1,6 @@
+
+#* This class is used to calibrate both cameras using a chessboard 
+
 import cv2
 import numpy as np 
 import glob
