@@ -15,8 +15,17 @@ class GetCalibrationImages:
         self.path1 = f"./vision_calibration/images_to_calibrate/Camera{self.cam1_index}/"
         self.path2 = f"./vision_calibration/images_to_calibrate/Camera{self.cam2_index}/"
 
+    def clearPath(self):  #! Otimizar esta parte -> Colocar tudo num ciclo for
+        if os.path.exists(self.path1):
+            for file1 in os.scandir(self.path1):
+                if file1.name.endswith(".png"):
+                    os.unlink(file1)
+        if os.path.exists(self.path2):
+            for file2 in os.scandir(self.path2):
+                if file2.name.endswith(".png"):
+                    os.unlink(file2)
 
-    def get_images(self):
+    def getImages(self):
         if not os.path.exists(self.path1):
             os.makedirs(self.path1)
         if not os.path.exists(self.path2):
@@ -42,6 +51,7 @@ class GetCalibrationImages:
 
             frames = np.hstack((img1, img2))
             cv2.imshow("Cameras", frames)
+
 
         cam1.release()
         cam2.release()

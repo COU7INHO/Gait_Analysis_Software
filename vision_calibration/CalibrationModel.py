@@ -4,7 +4,7 @@
 import cv2
 import numpy as np 
 import glob
-from GetBothCamsImgs import GetCalibrationImages
+from vision_calibration.GetBothCamsImgs import GetCalibrationImages
 
 CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 CRITERIA_STEREO = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -23,7 +23,7 @@ class CalibrationModel(GetCalibrationImages):
         self.frameheight = frameheight
         self.framesize = (self.framewidth, self.frameheight)
     
-    def find_chessboard_corners(self, imshow=False):
+    def findChessboardCorners(self, imshow=False):
         objp = np.zeros((self.chessboardrows * self.chessboardcols, 3), np.float32)
         objp[:,:2] = np.mgrid[0:self.chessboardrows,0:self.chessboardcols].T.reshape(-1,2)
         objp = objp * self.squaresize
@@ -59,6 +59,7 @@ class CalibrationModel(GetCalibrationImages):
                 cv2.drawChessboardCorners(self.imgR, self.chessboardsize, cornersR, self.retR)
                 
                 if imshow == True:
+
                     imgRL = np.hstack((self.imgL, self.imgR))
                     cv2.imshow("Chessboard corners", imgRL)
                     cv2.waitKey(2000)
@@ -75,10 +76,10 @@ class CalibrationModel(GetCalibrationImages):
         heightR, widthR, self.channelsR = self.imgR.shape
         self.newCameraMatrixR, self.roi_R = cv2.getOptimalNewCameraMatrix(cameraMatrixR, self.distR, (widthR, heightR), 1, (widthR, heightR))
     
-    def matrixcalculation(self):
+    def stereoCalculation(self):
         self.retStereo, self.newCameraMatrixL, self.distL, self.newCameraMatrixR, self.distR, self.rot, self.trans, self.essentialMatrix, self.fundamentalMatrix = cv2.stereoCalibrate(self.objpoints, self.imgpointsL, self.imgpointsR, self.newCameraMatrixL, self.distL, self.newCameraMatrixR, self.distR, self.grayL.shape[::-1], CRITERIA_STEREO, FLAGS)
-   
-    def newmatrix(self):
+        
+    def newMatrix(self):
         rectifyScale = 1
         rectL, rectR, projMatrixL, projMatrixR, Q, self.roi_L, self.roi_R = cv2.stereoRectify(self.newCameraMatrixL, self.distL, self.newCameraMatrixR, self.distR, self.grayL.shape[::-1], self.rot, self.trans, rectifyScale,(0,0))
 
@@ -87,6 +88,7 @@ class CalibrationModel(GetCalibrationImages):
 
         cv_file = cv2.FileStorage("./vision_calibration/stereoMap.xml", cv2.FILE_STORAGE_WRITE)
 
+    
         cv_file.write('stereoMapL_x',stereoMapL[0])
         cv_file.write('stereoMapL_y',stereoMapL[1])
         cv_file.write('stereoMapR_x',stereoMapR[0])
