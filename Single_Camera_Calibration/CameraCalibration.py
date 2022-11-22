@@ -76,7 +76,7 @@ class CalibrateCamera():
         
         objpoints = [] 
         imgpoints = [] 
-
+        
         for camera in self.cameras:
             while camera.isOpened():
                 for path, index in zip(self.paths, self.indices):
@@ -92,20 +92,27 @@ class CalibrateCamera():
                             corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
                             imgpoints.append(corners2)
                             cv.drawChessboardCorners(frame, chessboardSize, corners2, ret)
+                            
                             if self.imshow == True:
                                 cv.imshow(f"Calibrated images, Camera{index}", frame)
                                 k = cv.waitKey(0)
+
                                 if k == ord('q'):
                                     break
+
+                            camera.release()
+                            cv.destroyAllWindows()
                             
-                                camera.release()
-                                cv.destroyAllWindows()
-                        
                         if ret == False:
                             print("No pattern detected")
                             break
+                            
 
-            ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+
+                        
+
+
+        '''ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
             h,  w = frame.shape[:2]
             newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
@@ -119,4 +126,4 @@ class CalibrateCamera():
                 for camera, index in zip(self.cameras, self.indices):
                     cv.imshow(f"Calibrated Frame, Camera{index}", frame)
                 if cv.waitKey(1) == ord('q'):
-                    break
+                    break'''
