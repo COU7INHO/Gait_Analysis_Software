@@ -61,7 +61,7 @@ class CalibrateCamera():
                 camera.release()
                 cv.destroyAllWindows()
 
-    def calibrateCamera(self,squareSize=25, chessboardRows=9, chessboardCols=6, imshow=False):
+    def findChessboardCorners(self,squareSize=25, chessboardRows=9, chessboardCols=6, imshow=False):
 
         self.squareSize = squareSize
         self.chessboardRows = chessboardRows
@@ -74,56 +74,42 @@ class CalibrateCamera():
         objp[:,:2] = np.mgrid[0:self.chessboardRows,0:self.chessboardCols].T.reshape(-1,2)
         objp = objp * self.squareSize
         
-        objpoints = [] 
-        imgpoints = [] 
+        self.objpoints = [] 
+        self.imgpoints = [] 
         
+        path = 0
+        index = 0
         for camera in self.cameras:
-            while camera.isOpened():
-                for path, index in zip(self.paths, self.indices):
-                    images = glob.glob(path + "*.png")
+            images = glob.glob(self.paths[path] + "*.png")
 
-                    for img in images:
-                        frame = cv.imread(img)
-                        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-                        ret, corners = cv.findChessboardCorners(gray, chessboardSize, None)
+            for img in images:
+                self.frame = cv.imread(img)
+                self.gray = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
+                self.ret, corners = cv.findChessboardCorners(self.gray, chessboardSize, None)
 
-                        if ret == True:
-                            objpoints.append(objp)
-                            corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
-                            imgpoints.append(corners2)
-                            cv.drawChessboardCorners(frame, chessboardSize, corners2, ret)
-                            
-                            if self.imshow == True:
-                                cv.imshow(f"Calibrated images, Camera{index}", frame)
-                                k = cv.waitKey(0)
+                if self.ret == True:
+                    self.objpoints.append(objp)
+                    corners2 = cv.cornerSubPix(self.gray,corners, (11,11), (-1,-1), criteria)
+                    self.imgpoints.append(corners2)
+                    cv.drawChessboardCorners(self.frame, chessboardSize, corners2, self.ret)
+                    
+                    if self.imshow == True:
+                        cv.imshow(f"Calibrated images, Camera{index}", self.frame)
+                        k = cv.waitKey(0)
 
-                                if k == ord('q'):
-                                    break
-
-                            camera.release()
-                            cv.destroyAllWindows()
-                            
-                        if ret == False:
-                            print("No pattern detected")
+                        if k == ord('q'):
                             break
-                            
-
-
                         
+                        cv.destroyAllWindows()
+                    
+                if self.ret == False:
+                    print("No pattern detected")
+                    break
+                
+            path += 1
+            index += 1
 
 
-        '''ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-            h,  w = frame.shape[:2]
-            newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-
-            mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
-
-            while camera.isOpened():
-                success, frame = camera.read()
-                frame = cv.remap(frame, mapx, mapy, cv.INTER_LANCZOS4, cv.BORDER_CONSTANT, 0)
-
-                for camera, index in zip(self.cameras, self.indices):
-                    cv.imshow(f"Calibrated Frame, Camera{index}", frame)
-                if cv.waitKey(1) == ord('q'):
-                    break'''
+            
+                          
