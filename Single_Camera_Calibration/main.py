@@ -4,5 +4,5 @@ from CameraCalibration import CalibrateCamera
 cameras = CalibrateCamera(0, 1)
 cameras.getCalibrationImages()
 cameras.findChessboardCorners(imshow=False)
-#cameras.calibrateCamera()
-x = 2
+cameras.calibrateCamera()
+cameras.display()

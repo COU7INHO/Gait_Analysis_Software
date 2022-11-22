@@ -156,3 +156,4 @@ cython_debug/
 /vision_calibration/images_to_calibrate
 stereomap.xml
 /Single_Camera_Calibration/CalibrationImages
+*.xml

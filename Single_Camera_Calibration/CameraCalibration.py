@@ -6,6 +6,7 @@ import os
 import glob
 import numpy as np
 
+CRITERIA = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 class CalibrateCamera():
 
@@ -17,6 +18,7 @@ class CalibrateCamera():
         for index in self.indices:
             camera = cv.VideoCapture(index)
             self.cameras.append(camera)
+
 
     def getCalibrationImages(self):
         self.paths = []
@@ -67,31 +69,31 @@ class CalibrateCamera():
         self.chessboardRows = chessboardRows
         self.chessboardCols = chessboardCols
         self.imshow = imshow
-        chessboardSize = (self.chessboardRows, self.chessboardCols)
-        criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        self.chessboardSize = (self.chessboardRows, self.chessboardCols)
         
-        objp = np.zeros((self.chessboardCols*self.chessboardRows,3), np.float32)
-        objp[:,:2] = np.mgrid[0:self.chessboardRows,0:self.chessboardCols].T.reshape(-1,2)
-        objp = objp * self.squareSize
-        
+        self.objp = np.zeros((self.chessboardCols*self.chessboardRows,3), np.float32)
+        self.objp[:,:2] = np.mgrid[0:self.chessboardRows,0:self.chessboardCols].T.reshape(-1,2)
+        self.objp = self.objp * self.squareSize
+
         self.objpoints = [] 
         self.imgpoints = [] 
         
         path = 0
         index = 0
-        for camera in self.cameras:
+
+        for index in range(len(self.indices)):
             images = glob.glob(self.paths[path] + "*.png")
 
             for img in images:
                 self.frame = cv.imread(img)
                 self.gray = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
-                self.ret, corners = cv.findChessboardCorners(self.gray, chessboardSize, None)
+                self.ret, corners = cv.findChessboardCorners(self.gray, self.chessboardSize, None)
 
                 if self.ret == True:
-                    self.objpoints.append(objp)
-                    corners2 = cv.cornerSubPix(self.gray,corners, (11,11), (-1,-1), criteria)
+                    self.objpoints.append(self.objp)
+                    corners2 = cv.cornerSubPix(self.gray,corners, (11,11), (-1,-1), CRITERIA)
                     self.imgpoints.append(corners2)
-                    cv.drawChessboardCorners(self.frame, chessboardSize, corners2, self.ret)
+                    cv.drawChessboardCorners(self.frame, self.chessboardSize, corners2, self.ret)
                     
                     if self.imshow == True:
                         cv.imshow(f"Calibrated images, Camera{index}", self.frame)
@@ -105,11 +107,56 @@ class CalibrateCamera():
                 if self.ret == False:
                     print("No pattern detected")
                     break
-                
+
             path += 1
             index += 1
 
+    def calibrateCamera(self):
 
+        path = 0
+        index = 0
+   
+        for index in range(len(self.indices)):
+            images = glob.glob(self.paths[path] + "*.png")
 
+            for img in images:
+                self.frame = cv.imread(img)
+                self.gray = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
+                self.ret, corners = cv.findChessboardCorners(self.gray, self.chessboardSize, None)
+
+                if self.ret == True:
+                    self.objpoints.append(self.objp)
+                    corners2 = cv.cornerSubPix(self.gray,corners, (11,11), (-1,-1), CRITERIA)
+                    self.imgpoints.append(corners2)
+            
+            ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(self.objpoints, self.imgpoints, self.gray.shape[::-1], None, None)
+            h, w = self.frame.shape[:2]
+            newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+            mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+            
+            cv_file = cv.FileStorage(f"./Single_Camera_Calibration/map{index}.xml", cv.FILE_STORAGE_WRITE)
+            cv_file.write(f"map{index}_x",mapx)
+            cv_file.write(f"map{index}_y",mapy)
+            cv_file.release()
+
+            path += 1
+            index += 1
+
+    def display(self):
+        index = 0
+
+        for index, camera in zip(self.indices, self.cameras):
+            cv_file = cv.FileStorage()
+            cv_file.open(f"./Single_Camera_Calibration/map{index}.xml", cv.FileStorage_READ)
+
+            map_x = cv_file.getNode(f"map{index}_x").mat()
+            map_y = cv_file.getNode(f"map{index}_y").mat()
+
+            while camera.isOpened():
+                success, frame = camera.read()
+                frame = cv.remap(frame, map_x, map_y, cv.INTER_LANCZOS4, cv.BORDER_CONSTANT, 0)
+                cv.imshow("Calibrated video", frame)
+                cv.waitKey(1)
+            index += 1
             
                           
