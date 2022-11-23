@@ -1,8 +1,15 @@
 from CameraCalibration import CalibrateCamera
 
+cam1_index = 0
+cam2_index = 1
 
-cameras = CalibrateCamera(0, 1)
-cameras.getCalibrationImages()
-cameras.findChessboardCorners(imshow=False)
-cameras.calibrateCamera()
+new_calibration = input("\nNew camera to calibrate? Y -> Yes\n>> ").upper()
+
+cameras = CalibrateCamera(cam1_index, cam2_index)
+
+if new_calibration == 'Y':
+    cameras.getCalibrationImages()
+    cameras.findChessboardCorners(imshow=False)
+    cameras.calibrateCamera()
+
 cameras.display()
