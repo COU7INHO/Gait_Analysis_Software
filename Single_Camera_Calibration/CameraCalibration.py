@@ -30,38 +30,36 @@ class CalibrateCamera():
             os.makedirs(self.paths[0])
         if not os.path.exists(self.paths[1]):
             os.makedirs(self.paths[1])
-
-        new_images = input("Do you want to get new calibration images? Y -> Yes\n >> ").upper()
         
-        if new_images == 'Y':
-            if os.path.exists(self.paths[0]):
-                for file1 in os.scandir(self.paths[0]):
-                    if file1.name.endswith(".png"):
-                        os.unlink(file1)
-            if os.path.exists(self.paths[1]):
-                for file2 in os.scandir(self.paths[1]):
-                    if file2.name.endswith(".png"):
-                        os.unlink(file2)
+        if os.path.exists(self.paths[0]):
+            for file1 in os.scandir(self.paths[0]):
+                if file1.name.endswith(".png"):
+                    os.unlink(file1)
+        if os.path.exists(self.paths[1]):
+            for file2 in os.scandir(self.paths[1]):
+                if file2.name.endswith(".png"):
+                    os.unlink(file2)
 
-            for camera, index in zip(self.cameras, self.indices):
-                n_images = 0
+        for camera, index in zip(self.cameras, self.indices):
+            n_images = 0
 
-                while camera.isOpened():
-                    success, frame = camera.read()
+            while camera.isOpened():
+                success, frame = camera.read()
 
-                    k = cv.waitKey(1)
+                k = cv.waitKey(1)
 
-                    if k == ord('q'):
-                        break
-                    elif k == ord('s'):
-                        cv.imwrite(self.paths[index] + "Cam" + str(index) + '_' + str(n_images) + ".png", frame)
-                        print(f"Camera{index}, images saved -> {n_images}")
-                        n_images += 1
-                    
-                    cv.imshow("Get New Calibration Images", frame)
+                if k == ord('q'):
+                    break
+                
+                elif k == ord('s'):
+                    cv.imwrite(self.paths[index] + "Cam" + str(index) + '_' + str(n_images) + ".png", frame)
+                    print(f"Camera{index}, images saved -> {n_images}")
+                    n_images += 1
+                
+                cv.imshow("Get New Calibration Images", frame)
 
-                camera.release()
-                cv.destroyAllWindows()
+            camera.release()
+            cv.destroyAllWindows()
 
     def findChessboardCorners(self,squareSize=25, chessboardRows=9, chessboardCols=6, imshow=False):
 
@@ -93,9 +91,9 @@ class CalibrateCamera():
                     self.objpoints.append(self.objp)
                     corners2 = cv.cornerSubPix(self.gray,corners, (11,11), (-1,-1), CRITERIA)
                     self.imgpoints.append(corners2)
-                    cv.drawChessboardCorners(self.frame, self.chessboardSize, corners2, self.ret)
                     
                     if self.imshow == True:
+                        cv.drawChessboardCorners(self.frame, self.chessboardSize, corners2, self.ret)
                         cv.imshow(f"Calibrated images, Camera{index}", self.frame)
                         k = cv.waitKey(0)
 
@@ -129,15 +127,22 @@ class CalibrateCamera():
                     corners2 = cv.cornerSubPix(self.gray,corners, (11,11), (-1,-1), CRITERIA)
                     self.imgpoints.append(corners2)
             
-            ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(self.objpoints, self.imgpoints, self.gray.shape[::-1], None, None)
-            h, w = self.frame.shape[:2]
-            newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-            mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
-            
-            cv_file = cv.FileStorage(f"./Single_Camera_Calibration/map{index}.xml", cv.FILE_STORAGE_WRITE)
-            cv_file.write(f"map{index}_x",mapx)
-            cv_file.write(f"map{index}_y",mapy)
-            cv_file.release()
+                    self.ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(self.objpoints, self.imgpoints, self.gray.shape[::-1], None, None)
+                    h, w = self.frame.shape[:2]
+                    newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+                    mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+                    
+                    cv_file = cv.FileStorage(f"./Single_Camera_Calibration/map{index}.xml", cv.FILE_STORAGE_WRITE)
+                    cv_file.write(f"map{index}_x",mapx)
+                    cv_file.write(f"map{index}_y",mapy)
+                    cv_file.release()
+
+                    mean_error = 0
+                    for i in range(len(self.objpoints)):
+                        imgpoints2, _ = cv.projectPoints(self.objpoints[i], rvecs[i], tvecs[i], mtx, dist)
+                        error = cv.norm(self.imgpoints[i], imgpoints2, cv.NORM_L2)/len(imgpoints2)
+                        mean_error += error
+                    print( f"Cam{index} error: {mean_error/len(self.objpoints)}")
 
             path += 1
             index += 1
@@ -156,7 +161,10 @@ class CalibrateCamera():
                 success, frame = camera.read()
                 frame = cv.remap(frame, map_x, map_y, cv.INTER_LANCZOS4, cv.BORDER_CONSTANT, 0)
                 cv.imshow("Calibrated video", frame)
-                cv.waitKey(1)
-            index += 1
-            
-                          
+                if cv.waitKey(1) == ord('q'):
+                    break
+
+            camera.release()
+            cv.destroyAllWindows()
+                
+            index += 1              
