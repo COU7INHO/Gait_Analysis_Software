@@ -19,7 +19,6 @@ class CalibrateCamera():
             camera = cv.VideoCapture(index)
             self.cameras.append(camera)
 
-
     def getCalibrationImages(self):
         self.paths = []
         for index in self.indices:
@@ -145,26 +144,4 @@ class CalibrateCamera():
                     print( f"Cam{index} error: {mean_error/len(self.objpoints)}")
 
             path += 1
-            index += 1
-
-    def display(self):
-        index = 0
-
-        for index, camera in zip(self.indices, self.cameras):
-            cv_file = cv.FileStorage()
-            cv_file.open(f"./Single_Camera_Calibration/map{index}.xml", cv.FileStorage_READ)
-
-            map_x = cv_file.getNode(f"map{index}_x").mat()
-            map_y = cv_file.getNode(f"map{index}_y").mat()
-
-            while camera.isOpened():
-                success, frame = camera.read()
-                frame = cv.remap(frame, map_x, map_y, cv.INTER_LANCZOS4, cv.BORDER_CONSTANT, 0)
-                cv.imshow("Calibrated video", frame)
-                if cv.waitKey(1) == ord('q'):
-                    break
-
-            camera.release()
-            cv.destroyAllWindows()
-                
-            index += 1              
+            index += 1     

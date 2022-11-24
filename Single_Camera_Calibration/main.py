@@ -1,4 +1,5 @@
 from CameraCalibration import CalibrateCamera
+from DisplayCalibratedVideo import DisplayVideo
 
 cam1_index = 0
 cam2_index = 1
@@ -12,4 +13,5 @@ if new_calibration == 'Y':
     cameras.findChessboardCorners(imshow=False)
     cameras.calibrateCamera()
 
-cameras.display()
+video = DisplayVideo(cam1_index, cam2_index)
+video.display()
