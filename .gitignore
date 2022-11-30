@@ -154,6 +154,6 @@ cython_debug/
 .vscode
 .DS_Store
 /vision_calibration/images_to_calibrate
-stereomap.xml
 /Single_Camera_Calibration/CalibrationImages
 *.xml
+./ML_Tracking/yolov3_training_last.weights
