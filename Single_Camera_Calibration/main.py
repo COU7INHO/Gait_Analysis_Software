@@ -1,5 +1,5 @@
-from Single_Camera_Calibration.CameraCalibration import CalibrateCamera
-from Single_Camera_Calibration.DisplayCalibratedVideo import DisplayVideo
+from CameraCalibration import CalibrateCamera
+from DisplayCalibratedVideo import DisplayVideo
 
 cam1_index = 0
 cam2_index = 1

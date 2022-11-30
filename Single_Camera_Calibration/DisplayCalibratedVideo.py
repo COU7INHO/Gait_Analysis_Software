@@ -1,5 +1,5 @@
 import cv2 as cv
-from Single_Camera_Calibration.CameraCalibration import CalibrateCamera
+from CameraCalibration import CalibrateCamera
 
 
 class DisplayVideo(CalibrateCamera):
