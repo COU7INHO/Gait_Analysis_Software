@@ -156,4 +156,5 @@ cython_debug/
 /vision_calibration/images_to_calibrate
 /Single_Camera_Calibration/CalibrationImages
 *.xml
+/ML_Tracking/yolov3_testing.cfg
 /ML_Tracking/yolov3_training_last.weights
