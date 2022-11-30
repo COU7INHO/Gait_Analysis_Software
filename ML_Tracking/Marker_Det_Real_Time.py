@@ -23,6 +23,7 @@ while camera.isOpened():
 
     ret, frame = camera.read()
     
+    fps = camera.get(cv2.CAP_PROP_FPS)
     
     # Loading image
     
@@ -67,9 +68,15 @@ while camera.isOpened():
             label = str(classes[class_ids[i]])
             color = colors[class_ids[i]]
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
-            #cv2.putText(img, label, (x, y + 70), cv2.FONT_HERSHEY_PLAIN, 1, color, 2)
-
-    cv2.imshow("Image", frame)
+            cv2.putText(frame, label, (x, y - 30), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 2)
+    
+    cv2.putText(frame, f"FPS: {str(round(fps, 3))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 3)
+    cv2.imshow("Detecting markers...", frame)
+    
     key = cv2.waitKey(1)
 
+    if key == ord('q'):
+        break
+
+camera.release()
 cv2.destroyAllWindows()
