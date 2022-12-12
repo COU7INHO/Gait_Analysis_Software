@@ -1,3 +1,6 @@
+'''This script is used to collect the images that will be used to create a 
+machine learning model to detect a specific object'''
+
 import cv2 as cv
 
 camera = cv.VideoCapture(1)
