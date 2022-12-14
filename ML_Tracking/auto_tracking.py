@@ -57,8 +57,8 @@ import numpy as np
 from time import time
 from detector_function import markerDetection, firstBBox
 
-camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/hide.mov")
-#camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
+camera = cv2.VideoCapture(0)
 
 loop_time = time()
 ret, frame = camera.read()
@@ -70,7 +70,7 @@ firstBBox(frame, boxes, indexes)
 multiTracker = cv2.legacy.MultiTracker_create()
 
 for box in boxes:
-  multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
+    multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
 
 if boxes == []:
     print("\nERROR: There are no initial bounding boxes\nMake sure that all markers are visible in the first frame\n")
@@ -95,8 +95,11 @@ while camera.isOpened():
         y = int(newbox[1])
         w = int(newbox[2])
         h = int(newbox[3])
+        center = (x + w//2, y + h//2)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
+        cv2.circle(frame, center, 6, (255, 0, 0), -1)
         cv2.putText(frame, f"Marker: {str(i)}", (x, y - 20), 1, cv2.FONT_HERSHEY_COMPLEX, (255, 100, 0), 2)
+
     cv2.putText(frame, f"FPS: {str(round(fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 3)
     cv2.imshow('MultiTracker', frame)
 

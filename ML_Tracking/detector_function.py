@@ -34,7 +34,8 @@ def markerDetection(camera, frame):
                 y2 = int(y + h/2)
                 w = x2 - x1
                 h = y2 - y1
-                
+
+
                 boxes.append([x1, y1, w, h])
                 confidences.append(float(confidence))
                 class_ids.append(class_id)
@@ -44,8 +45,9 @@ def markerDetection(camera, frame):
 
 
 def firstBBox(frame, boxes, indexes):
+    # Draw first bounding boxes
     for i in range(len(boxes)):    
         if i in indexes:
             x, y, w, h = boxes[i]
-
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+
