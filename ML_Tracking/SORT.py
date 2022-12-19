@@ -24,10 +24,6 @@ layer_names = net.getLayerNames()
 output_layers = [layer_names[i-1] for i in net.getUnconnectedOutLayers()]
 
 loop_time = time()
-# Initialize variables for tracking
-boxes = []  # Bounding boxes of the detected objects
-confidences = []  # Confidences of the detections
-class_ids = []  # Class IDs of the detected objects
 
 while camera.isOpened():
     # Read a frame from the video
@@ -48,6 +44,12 @@ while camera.isOpened():
     blob = cv2.dnn.blobFromImage(frame, 0.00392, (320, 320), (0, 0, 0), True, crop=False)
     net.setInput(blob)
     outs = net.forward(output_layers)
+
+    # Initialize variables for tracking
+    boxes = []  # Bounding boxes of the detected objects
+    confidences = []  # Confidences of the detections
+    class_ids = []  # Class IDs of the detected objects
+
 
     # Loop through the detections
     for out in outs:
