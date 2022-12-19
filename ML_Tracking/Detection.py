@@ -1,8 +1,6 @@
-'''https://www.youtube.com/watch?v=hfXMw2dQO4E'''
 
 import cv2
 import numpy as np
-import imutils
 from time import time
 
 
@@ -10,7 +8,7 @@ net = cv2.dnn.readNet("/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yo
 
 classes = ["Marker"]
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
 loop_time = time()
 
 layer_names = net.getLayerNames()
@@ -20,7 +18,6 @@ output_layers = [layer_names[i-1] for i in net.getUnconnectedOutLayers()]
 while camera.isOpened():
 
     ret, frame = camera.read()
-    frame = imutils.resize(frame, width=720)
 
     fps = 1/(time() - loop_time)
     loop_time = time()

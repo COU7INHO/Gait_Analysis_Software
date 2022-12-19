@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-def markerDetection(camera, frame):
+def markerDetection(frame):
     net = cv2.dnn.readNet("/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yolov3_training_last.weights", "/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yolov3_testing.cfg")
     classes = ["Marker"]
 
@@ -34,7 +34,6 @@ def markerDetection(camera, frame):
                 y2 = int(y + h/2)
                 w = x2 - x1
                 h = y2 - y1
-
 
                 boxes.append([x1, y1, w, h])
                 confidences.append(float(confidence))

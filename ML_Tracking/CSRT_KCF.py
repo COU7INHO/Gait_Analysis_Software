@@ -58,20 +58,25 @@ from time import time
 from detector_function import markerDetection, firstBBox
 
 camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
-camera = cv2.VideoCapture(0)
+#camera = cv2.VideoCapture(0)
 
 loop_time = time()
 ret, frame = camera.read()
 
-frame, boxes, indexes = markerDetection(camera, frame)
+# Method to detect the markers on the first frame
+frame, boxes, indexes = markerDetection(frame)
 
+# Method to draw the bounding boxes in each detected marker
 firstBBox(frame, boxes, indexes)
 
+# Create the multiTracker to track multiple markers
 multiTracker = cv2.legacy.MultiTracker_create()
 
+# Add a tracker to each bounding box
 for box in boxes:
     multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
 
+# If there are any boxes on the first frame it raises an error
 if boxes == []:
     print("\nERROR: There are no initial bounding boxes\nMake sure that all markers are visible in the first frame\n")
 
@@ -84,18 +89,23 @@ while camera.isOpened():
 
     if success == False:
         break
-
+    
+    # Analyze the FPS rate
     fps = 1/(time() - loop_time)
     loop_time = time()
-
+    
+    # Update the tracker on the next frame
     tracking, boxes = multiTracker.update(frame)
 
+    # Get the x, y coordinates, width and heigh of each bounding box
     for i, newbox in enumerate(boxes):
         x = int(newbox[0])
         y = int(newbox[1])
         w = int(newbox[2])
         h = int(newbox[3])
+        # Get the center point of each bounding box 
         center = (x + w//2, y + h//2)
+
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
         cv2.circle(frame, center, 6, (255, 0, 0), -1)
         cv2.putText(frame, f"Marker: {str(i)}", (x, y - 20), 1, cv2.FONT_HERSHEY_COMPLEX, (255, 100, 0), 2)
