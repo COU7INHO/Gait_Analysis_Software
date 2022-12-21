@@ -158,4 +158,5 @@ cython_debug/
 *.xml
 *.cfg
 *.weights
-/ML_Tracking/sort
+*.gitignore
+*.gitattributes
