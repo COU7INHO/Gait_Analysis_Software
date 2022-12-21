@@ -52,13 +52,18 @@ de se encontrar novas bounding boxes iniciais
                     sempre a usar o mesmo marcador em qualquer análise
 - Não esquecer que vai ser usado o centro da bounding box para fazer o tracking dos marcadores'''
 
+#? Para usar este código os marcadores têm de estar visíveis no primeiro frame. 
+#? Após isso é feito o tracking com os marcadores que foram considerados 
+#? nesse primeiro frame. Caso o tracking seja feito não é possível voltar a
+#?  detetar os marcadores porque só foram detetados no primeiro frame. 
+
 import cv2
 import numpy as np
 from time import time
 from detector_function import markerDetection, firstBBox
 
 camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
-#camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0)
 
 loop_time = time()
 ret, frame = camera.read()

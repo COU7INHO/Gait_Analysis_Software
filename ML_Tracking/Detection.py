@@ -9,6 +9,7 @@ net = cv2.dnn.readNet("/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yo
 classes = ["Marker"]
 
 camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
+camera = cv2.VideoCapture(0)
 loop_time = time()
 
 layer_names = net.getLayerNames()
