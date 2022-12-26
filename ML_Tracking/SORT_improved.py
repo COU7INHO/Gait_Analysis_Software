@@ -8,7 +8,7 @@ from sort.sort import Sort
 #* can be inactive (i.e., without detections) before it is deleted. 
 #* The min_hits parameter determines the minimum number of detections that a 
 #* track needs to have in order to be considered reliable.
-tracker = Sort(max_age=80, min_hits=80)
+tracker = Sort(max_age=5, min_hits=2)
 
 # Load the YOLOv3 model
 net = cv2.dnn.readNet("/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yolov3_training_last.weights", "/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yolov3_testing.cfg")

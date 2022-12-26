@@ -41,12 +41,3 @@ def markerDetection(frame):
                 
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
     return frame, boxes, indexes
-
-
-def firstBBox(frame, boxes, indexes):
-    # Draw first bounding boxes
-    for i in range(len(boxes)):    
-        if i in indexes:
-            x, y, w, h = boxes[i]
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
-

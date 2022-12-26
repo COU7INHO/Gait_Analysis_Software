@@ -158,5 +158,3 @@ cython_debug/
 *.xml
 *.cfg
 *.weights
-*.gitignore
-*.gitattributes

@@ -60,7 +60,11 @@ de se encontrar novas bounding boxes iniciais
 import cv2
 import numpy as np
 from time import time
-from detector_function import markerDetection, firstBBox
+from detector_function import markerDetection
+
+
+# Number of markers to detect and track
+n_markers = 1
 
 #camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
 camera = cv2.VideoCapture(0)
@@ -71,24 +75,16 @@ ret, frame = camera.read()
 # Method to detect the markers on the first frame
 frame, boxes, indexes = markerDetection(frame)
 
-# Method to draw the bounding boxes in each detected marker
-firstBBox(frame, boxes, indexes)
-
 # Create the multiTracker to track multiple markers
 multiTracker = cv2.legacy.MultiTracker_create()
 
 # Add a tracker to each bounding box
 for box in boxes:
-    multiTracker.add(cv2.legacy.TrackerKCF_create(), frame, box)
+    multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
 
-# If there are any boxes on the first frame it raises an error
-if boxes == []:
-    print("\nERROR: There are no initial bounding boxes\nMake sure that all markers are visible in the first frame\n")
+print("\nStarting programme...\n")
 
 while camera.isOpened():
-
-    if boxes == []:
-        break
 
     success, frame = camera.read()
 
@@ -99,8 +95,29 @@ while camera.isOpened():
     fps = 1/(time() - loop_time)
     loop_time = time()
     
-    # Update the tracker on the next frame
-    tracking, boxes = multiTracker.update(frame)
+    # Remove boxes equal to [0, 0, 0, 0] -> Empty boxes
+    boxes = [box for box in boxes if np.any(box != [0, 0, 0, 0])]
+
+    # If there are fewer than n bounding boxes, run the detector
+    if len(boxes) != n_markers :
+        if n_markers - len(boxes) == 1:
+            cv2.putText(frame, "1 marker missing", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+        elif n_markers - len(boxes) == -1:
+            cv2.putText(frame, "1 marker in excess", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+        elif n_markers - len(boxes) > 1:
+            cv2.putText(frame, f"{int(n_markers - len(boxes))} markers missing", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+        elif n_markers - len(boxes) < -1:
+            cv2.putText(frame, f"{abs(int(n_markers - len(boxes)))} markers in excess", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+
+        frame, boxes, indexes = markerDetection(frame)
+        # Update the multiTracker with the new bounding boxes
+        multiTracker = cv2.legacy.MultiTracker_create()
+        for box in boxes:
+            multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
+    else:
+        cv2.putText(frame, "Tracking", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 3)
+        # Update the tracker
+        tracking, boxes = multiTracker.update(frame)
 
     # Get the x, y coordinates, width and heigh of each bounding box
     for i, newbox in enumerate(boxes):
@@ -115,7 +132,8 @@ while camera.isOpened():
         cv2.circle(frame, center, 6, (255, 0, 0), -1)
         cv2.putText(frame, f"Marker: {str(i)}", (x, y - 20), 1, cv2.FONT_HERSHEY_COMPLEX, (255, 100, 0), 2)
 
-    cv2.putText(frame, f"FPS: {str(round(fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 3)
+    cv2.putText(frame, f"FPS: {str(round(fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
+    cv2.putText(frame, f"Markers: {str(len(boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
     cv2.imshow('MultiTracker', frame)
 
     k = cv2.waitKey(1)
