@@ -7,9 +7,9 @@ from detector_function import markerDetection
 names = ["Shoulder", "Trochanter", "Knee", "Ankle", "V_Metatarsal"]
 
 # Number of markers to detect and track
-n_markers = 3
+n_markers = 4
 
-#camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
+#camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3 markers.mov")
 camera = cv2.VideoCapture(0)
 
 loop_time = time()
@@ -65,7 +65,7 @@ while camera.isOpened():
         # Update the tracker
         tracking, boxes = multiTracker.update(frame)
 
-    sorted_boxes = []
+    sorted_yCoord = []
 
     # Get the x, y coordinates, width and heigh of each bounding box
     for i, newbox in enumerate(boxes):
@@ -79,28 +79,29 @@ while camera.isOpened():
         y_coord = center[1]
 
         # Append a tuple containing the newbox object, its y coordinate in the center point, and its ID to the sorted_boxes list
-        sorted_boxes.append((y_coord, i))
+        sorted_yCoord.append((y_coord, i))
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
         cv2.circle(frame, center, 6, (255, 0, 0), -1)
     
     # Sort the sorted_boxes list by the y coordinate in the center point
-    sorted_boxes = sorted(sorted_boxes, key=lambda x: x[1])
+    sorted_yCoord = sorted(sorted_yCoord, key=lambda x: x[0])
 
     # Assign names to the markers in the sorted order
-    for i, (y_coord, id) in enumerate(sorted_boxes):
-        if i <= len(names):
+    for i, (y_coord, marker_id) in enumerate(sorted_yCoord):
+        if i < len(names):
             name = names[i]
         else:
             name = f"Marker {i}"
-        print(f"Marker {id}: {name}, y: {y_coord}")
+        print(f"Marker {marker_id}: {name}, y: {y_coord}")
 
-        for i, newbox in enumerate(boxes):
-            x = int(newbox[0])
-            y = int(newbox[1])
-            w = int(newbox[2])
-            h = int(newbox[3])
-            cv2.putText(frame, f"{i}: {names[i]}", (x, y - 20), 1, cv2.FONT_HERSHEY_COMPLEX, (0, 255, 128), 3)
+        for j, newbox in enumerate(boxes):
+            if j == marker_id:
+                x = int(newbox[0])
+                y = int(newbox[1])
+                w = int(newbox[2])
+                h = int(newbox[3])
+                cv2.putText(frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 128), 1)
 
     cv2.putText(frame, f"FPS: {str(round(fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
     cv2.putText(frame, f"Markers: {str(len(boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
