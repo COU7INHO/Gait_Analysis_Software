@@ -27,8 +27,6 @@ multiTracker = cv2.legacy.MultiTracker_create()
 for box in boxes:
     multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
 
-print("\nStarting programme...\n")
-
 while camera.isOpened():
 
     success, frame = camera.read()
@@ -67,6 +65,8 @@ while camera.isOpened():
 
     sorted_yCoord = []
 
+    prev_center = None
+
     # Get the x, y coordinates, width and heigh of each bounding box
     for i, newbox in enumerate(boxes):
         x = int(newbox[0])
@@ -83,7 +83,13 @@ while camera.isOpened():
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
         cv2.circle(frame, center, 6, (255, 0, 0), -1)
-    
+
+        # If this is not the first bounding box, draw a line to the previous one
+        if prev_center is not None:
+            cv2.line(frame, center, prev_center, (255, 255, 0), 2)
+         
+        prev_center = center
+        
     # Sort the sorted_boxes list by the y coordinate in the center point
     sorted_yCoord = sorted(sorted_yCoord, key=lambda x: x[0])
 
