@@ -4,12 +4,16 @@ import numpy as np
 from time import time
 from detector_function import markerDetection
 
+
+# List of markers
 names = ["Shoulder", "Trochanter", "Knee", "Ankle", "V_Metatarsal"]
 
-# Number of markers to detect and track
+# Initial settings
 n_markers = 4
+labels = True
+draw_lines = True
 
-#camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3 markers.mov")
+#camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
 camera = cv2.VideoCapture(0)
 
 loop_time = time()
@@ -34,10 +38,6 @@ while camera.isOpened():
     if success == False:
         break
     
-    # Analyze the FPS rate
-    fps = 1/(time() - loop_time)
-    loop_time = time()
-    
     # Remove boxes equal to [0, 0, 0, 0] -> Empty boxes
     boxes = [box for box in boxes if np.any(box != [0, 0, 0, 0])]
 
@@ -54,17 +54,19 @@ while camera.isOpened():
 
         # Run the detector
         frame, boxes, indexes = markerDetection(frame)
+
         # Update the multiTracker with the new bounding boxes
         multiTracker = cv2.legacy.MultiTracker_create()
         for box in boxes:
             multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
     else:
         cv2.putText(frame, "Tracking", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 3)
+       
         # Update the tracker
         tracking, boxes = multiTracker.update(frame)
 
     sorted_yCoord = []
-
+    centers = []
     prev_center = None
 
     # Get the x, y coordinates, width and heigh of each bounding box
@@ -73,7 +75,7 @@ while camera.isOpened():
         y = int(newbox[1])
         w = int(newbox[2])
         h = int(newbox[3])
-
+        
         # Get the center point of each bounding box 
         center = (x + w//2, y + h//2)
         y_coord = center[1]
@@ -81,17 +83,24 @@ while camera.isOpened():
         # Append a tuple containing the newbox object, its y coordinate in the center point, and its ID to the sorted_boxes list
         sorted_yCoord.append((y_coord, i))
 
+        # Create a list of center points
+        centers.append((center, i))
+
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
         cv2.circle(frame, center, 6, (255, 0, 0), -1)
 
         # If this is not the first bounding box, draw a line to the previous one
-        if prev_center is not None:
-            cv2.line(frame, center, prev_center, (255, 255, 0), 2)
-         
+        if draw_lines:
+            if prev_center is not None:
+                cv2.line(frame, center, prev_center, (255, 255, 0), 2)
+            
         prev_center = center
-        
+
     # Sort the sorted_boxes list by the y coordinate in the center point
     sorted_yCoord = sorted(sorted_yCoord, key=lambda x: x[0])
+
+    prev_x = 0
+    prev_y = 0
 
     # Assign names to the markers in the sorted order
     for i, (y_coord, marker_id) in enumerate(sorted_yCoord):
@@ -99,15 +108,30 @@ while camera.isOpened():
             name = names[i]
         else:
             name = f"Marker {i}"
-        print(f"Marker {marker_id}: {name}, y: {y_coord}")
+        print(f"Marker {marker_id}: {name}, y: {y_coord}, Center: {centers[i][0]}")
 
-        for j, newbox in enumerate(boxes):
-            if j == marker_id:
-                x = int(newbox[0])
-                y = int(newbox[1])
-                w = int(newbox[2])
-                h = int(newbox[3])
-                cv2.putText(frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 128), 1)
+        #print(f"prev_x = {prev_x} | prev_y = {prev_y}")
+        #print(f"centers[i][0][0] = {centers[i][0][0]} | centers[i][0][1] = {centers[i][0][1]}")
+        
+        if prev_x != 0 and prev_y != 0:
+            trunk_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
+            print(trunk_angle)
+
+        prev_x = centers[i][0][0]
+        prev_y = centers[i][0][1]
+
+        if labels:
+            for j, newbox in enumerate(boxes):
+                if j == marker_id:
+                    x = int(newbox[0])
+                    y = int(newbox[1])
+                    w = int(newbox[2])
+                    h = int(newbox[3])
+                    cv2.putText(frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 128), 1)
+
+    # Analyze the FPS rate
+    fps = 1/(time() - loop_time)
+    loop_time = time()
 
     cv2.putText(frame, f"FPS: {str(round(fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
     cv2.putText(frame, f"Markers: {str(len(boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
