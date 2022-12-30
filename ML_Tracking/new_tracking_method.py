@@ -9,7 +9,7 @@ from detector_function import markerDetection
 names = ["Shoulder", "Trochanter", "Knee", "Ankle", "V_Metatarsal"]
 
 # Initial settings
-n_markers = 4
+n_markers = 3
 labels = True
 draw_lines = True
 
@@ -101,6 +101,8 @@ while camera.isOpened():
 
     prev_x = 0
     prev_y = 0
+    trunk_angles = []
+    thigh_angles = []
 
     # Assign names to the markers in the sorted order
     for i, (y_coord, marker_id) in enumerate(sorted_yCoord):
@@ -114,11 +116,27 @@ while camera.isOpened():
         #print(f"centers[i][0][0] = {centers[i][0][0]} | centers[i][0][1] = {centers[i][0][1]}")
         
         if prev_x != 0 and prev_y != 0:
-            trunk_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
-            print(trunk_angle)
+            if i > 0 and i <= 1:
+                if (centers[i][0][1] - prev_y) != 0:
+                    trunk_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
+                    trunk_angles.append(trunk_angle)
+                    #print("Trunk_angle:", trunk_angle, ",", i)
+                    #cv2.putText(frame, f"{round(trunk_angle, 2)}", (10, 180),cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 3)
 
+            if i > 1 and i <= 2:
+                if (centers[i][0][1] - prev_y) != 0:
+                    thigh_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
+                    thigh_angles.append(thigh_angle)
+                    #print("Thigh_angle:", trunk_angle, ",", i)
+                    #cv2.putText(frame, f"{round(thigh_angle, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 3)
+            
         prev_x = centers[i][0][0]
         prev_y = centers[i][0][1]
+
+        for trunk_ang, thigh_ang in zip(trunk_angles, thigh_angles):
+            hip_ang = thigh_ang - trunk_ang
+            cv2.putText(frame, f"{round(hip_ang, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 3)
+
 
         if labels:
             for j, newbox in enumerate(boxes):
