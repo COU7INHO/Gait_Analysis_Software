@@ -9,12 +9,12 @@ from detector_function import markerDetection
 names = ["Shoulder", "Trochanter", "Knee", "Ankle", "V_Metatarsal"]
 
 # Initial settings
-n_markers = 3
+n_markers = 5
 labels = True
 draw_lines = True
 
-#camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
-camera = cv2.VideoCapture(0)
+#camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/5markers.mov")
+camera = cv2.VideoCapture(1)
 
 loop_time = time()
 
@@ -83,7 +83,7 @@ while camera.isOpened():
         # Append a tuple containing the newbox object, its y coordinate in the center point, and its ID to the sorted_boxes list
         sorted_yCoord.append((y_coord, i))
 
-        # Create a list of center points
+        # Append center point coordinate and index to centers list
         centers.append((center, i))
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
@@ -93,16 +93,22 @@ while camera.isOpened():
         if draw_lines:
             if prev_center is not None:
                 cv2.line(frame, center, prev_center, (255, 255, 0), 2)
-            
+        
+        # Define the new center point of each bounding box  
         prev_center = center
 
     # Sort the sorted_boxes list by the y coordinate in the center point
     sorted_yCoord = sorted(sorted_yCoord, key=lambda x: x[0])
 
+    # Create center point coordinates lists
     prev_x = 0
     prev_y = 0
+    
+    # Create angles lists
     trunk_angles = []
     thigh_angles = []
+    shank_angles = []
+    foot_angles = []
 
     # Assign names to the markers in the sorted order
     for i, (y_coord, marker_id) in enumerate(sorted_yCoord):
@@ -110,11 +116,8 @@ while camera.isOpened():
             name = names[i]
         else:
             name = f"Marker {i}"
-        print(f"Marker {marker_id}: {name}, y: {y_coord}, Center: {centers[i][0]}")
+        #print(f"Marker {marker_id}: {name}, y: {y_coord}, Center: {centers[i][0]}")
 
-        #print(f"prev_x = {prev_x} | prev_y = {prev_y}")
-        #print(f"centers[i][0][0] = {centers[i][0][0]} | centers[i][0][1] = {centers[i][0][1]}")
-        
         if prev_x != 0 and prev_y != 0:
             if i > 0 and i <= 1:
                 if (centers[i][0][1] - prev_y) != 0:
@@ -130,13 +133,34 @@ while camera.isOpened():
                     #print("Thigh_angle:", trunk_angle, ",", i)
                     #cv2.putText(frame, f"{round(thigh_angle, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 3)
             
+            if i > 2 and i <= 3:
+                if (centers[i][0][1] - prev_y) != 0:
+                    shank_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
+                    shank_angles.append(shank_angle)
+
+            if i > 3 and i <= 4:
+                if (centers[i][0][1] - prev_y) != 0:
+                    foot_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
+                    if foot_angle >= -180:
+                        foot_angle = 180 - foot_angle
+
+                    foot_angles.append(foot_angle)
+
         prev_x = centers[i][0][0]
         prev_y = centers[i][0][1]
 
-        for trunk_ang, thigh_ang in zip(trunk_angles, thigh_angles):
+        # Calculate hip angle
+        for trunk_ang, thigh_ang, shank_ang, foot_ang in zip(trunk_angles, thigh_angles, shank_angles, foot_angles):
             hip_ang = thigh_ang - trunk_ang
-            cv2.putText(frame, f"{round(hip_ang, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 3)
-
+            knee_angle = -(shank_ang - thigh_ang)
+            ankle_angle = foot_ang - shank_ang - 90
+            if ankle_angle > 90 and ankle_angle < 180:
+                ankle_angle = ankle_angle - 180
+            #ankle_angle = ankle_angle - (foot_ang[0] - shank_ang[0] - 90)
+            cv2.putText(frame, f"Hip Angle: {round(hip_ang, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, f"Knee Angle: {round(knee_angle, 2)}", (10, 280),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, f"Ankle Angle: {round(ankle_angle, 2)}", (10, 320),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, f"Foot Angle: {round(foot_ang, 2)}", (10, 360),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
 
         if labels:
             for j, newbox in enumerate(boxes):

@@ -26,7 +26,7 @@ def markerDetection(frame):
             class_id = np.argmax(scores)
             confidence = scores[class_id]
 
-            if confidence > 0.3:
+            if confidence > 0.5:
                 x, y, w, h = detection[0:4] * np.array([width, height, width, height])
                 x1 = int(x - w/2)
                 y1 = int(y - h/2)
@@ -39,5 +39,7 @@ def markerDetection(frame):
                 confidences.append(float(confidence))
                 class_ids.append(class_id)
                 
+    #indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
+
     return frame, boxes, indexes
