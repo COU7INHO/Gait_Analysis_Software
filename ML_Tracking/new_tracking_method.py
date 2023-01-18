@@ -34,10 +34,9 @@ for box in boxes:
 while camera.isOpened():
 
     success, frame = camera.read()
-
     if success == False:
         break
-    
+        
     # Remove boxes equal to [0, 0, 0, 0] -> Empty boxes
     boxes = [box for box in boxes if np.any(box != [0, 0, 0, 0])]
 
@@ -103,7 +102,7 @@ while camera.isOpened():
     # Create center point coordinates lists
     prev_x = 0
     prev_y = 0
-    
+
     # Create angles lists
     trunk_angles = []
     thigh_angles = []
@@ -143,20 +142,22 @@ while camera.isOpened():
                     foot_angle = np.degrees(np.arctan((centers[i][0][0] - prev_x)/(centers[i][0][1] - prev_y)))
                     if foot_angle >= -180:
                         foot_angle = 180 - foot_angle
-
                     foot_angles.append(foot_angle)
-
+   
         prev_x = centers[i][0][0]
         prev_y = centers[i][0][1]
 
         # Calculate hip angle
         for trunk_ang, thigh_ang, shank_ang, foot_ang in zip(trunk_angles, thigh_angles, shank_angles, foot_angles):
             hip_ang = thigh_ang - trunk_ang
-            knee_angle = -(shank_ang - thigh_ang)
+            knee_angle = - (shank_ang - thigh_ang)
+            knee_angle = thigh_ang - shank_ang
+
             ankle_angle = foot_ang - shank_ang - 90
+
             if ankle_angle > 90 and ankle_angle < 180:
                 ankle_angle = ankle_angle - 180
-            #ankle_angle = ankle_angle - (foot_ang[0] - shank_ang[0] - 90)
+            
             cv2.putText(frame, f"Hip Angle: {round(hip_ang, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
             cv2.putText(frame, f"Knee Angle: {round(knee_angle, 2)}", (10, 280),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
             cv2.putText(frame, f"Ankle Angle: {round(ankle_angle, 2)}", (10, 320),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
@@ -179,8 +180,8 @@ while camera.isOpened():
     cv2.putText(frame, f"Markers: {str(len(boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
     cv2.imshow('Gait analysis', frame)
 
-    k = cv2.waitKey(1)
-    if k == ord('q'):
+    key = cv2.waitKey(1)
+    if key == ord('q'):
         break 
 
 camera.release()

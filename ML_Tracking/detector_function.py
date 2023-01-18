@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 # This script is used to run the yolov3 model and detect the markers
 def markerDetection(frame):
     net = cv2.dnn.readNet("/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yolov3_training_last.weights", "/Users/tiagocoutinho/Desktop/Gait_Software/ML_Tracking/yolov3_testing.cfg")
@@ -26,7 +27,7 @@ def markerDetection(frame):
             class_id = np.argmax(scores)
             confidence = scores[class_id]
 
-            if confidence > 0.5:
+            if confidence > 0.6:
                 x, y, w, h = detection[0:4] * np.array([width, height, width, height])
                 x1 = int(x - w/2)
                 y1 = int(y - h/2)
