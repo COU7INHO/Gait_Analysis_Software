@@ -14,7 +14,7 @@ labels = True
 draw_lines = True
 
 #camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/5markers.mov")
-camera = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(0)
 
 loop_time = time()
 
@@ -30,6 +30,10 @@ multiTracker = cv2.legacy.MultiTracker_create()
 # Add a tracker to each bounding box
 for box in boxes:
     multiTracker.add(cv2.legacy.TrackerCSRT_create(), frame, box)
+
+ankle_angles = []
+first_ankle_angle = None
+angle_stored = False
 
 while camera.isOpened():
 
@@ -150,18 +154,26 @@ while camera.isOpened():
         # Calculate hip angle
         for trunk_ang, thigh_ang, shank_ang, foot_ang in zip(trunk_angles, thigh_angles, shank_angles, foot_angles):
             hip_ang = thigh_ang - trunk_ang
-            knee_angle = - (shank_ang - thigh_ang)
             knee_angle = thigh_ang - shank_ang
-
             ankle_angle = foot_ang - shank_ang - 90
 
             if ankle_angle > 90 and ankle_angle < 180:
                 ankle_angle = ankle_angle - 180
             
-            cv2.putText(frame, f"Hip Angle: {round(hip_ang, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
-            cv2.putText(frame, f"Knee Angle: {round(knee_angle, 2)}", (10, 280),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
-            cv2.putText(frame, f"Ankle Angle: {round(ankle_angle, 2)}", (10, 320),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
-            cv2.putText(frame, f"Foot Angle: {round(foot_ang, 2)}", (10, 360),cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
+            # This part of the code will store the first ankle angle value.
+            # The value will be stored only when the tracking starts 
+            # ankle_angles list will append only the first ankle angle value
+            if len(boxes) == n_markers and angle_stored == False:
+                ankle_angles.append(ankle_angle)
+                first_ankle_angle = ankle_angles[0]
+                angle_stored = True
+
+            if first_ankle_angle is not None:
+                ankle_angle = ankle_angle - first_ankle_angle
+
+            cv2.putText(frame, f"Hip Angle: {round(hip_ang, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 1, (20, 255, 217), 2)
+            cv2.putText(frame, f"Knee Angle: {round(knee_angle, 2)}", (10, 280),cv2.FONT_HERSHEY_COMPLEX, 1, (20, 255, 217), 2)
+            cv2.putText(frame, f"Ankle Angle: {round(ankle_angle, 2)}", (10, 320),cv2.FONT_HERSHEY_COMPLEX, 1, (20, 255, 217), 2)
 
         if labels:
             for j, newbox in enumerate(boxes):
@@ -186,3 +198,4 @@ while camera.isOpened():
 
 camera.release()
 cv2.destroyAllWindows()
+
