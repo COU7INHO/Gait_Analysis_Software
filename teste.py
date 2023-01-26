@@ -1,34 +1,33 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.animation import FuncAnimation
-import random
 
-class CreatePlot:
-    def __init__(self):
-        
-        # Create a figure and axes for the plot
-        self.fig, self.ax = plt.subplots()
+# Create figure and axes
+fig, ax = plt.subplots()
 
-        # Create a list to store the data
-        self.data = []
+# Set x-axis limits
+ax.set_xlim(0, 10)
+ax.set_ylim(-1, 10)
 
-    # Define a function to update the plot
-    def update(self, num):
-        # Add a new random data point to the list
-        self.data.append(random.randint(0, 80))
+# Create line object
+line, = ax.plot([], [], lw=2)
 
-        # Clear the previous plot
-        self.ax.clear()
+# Define initialization function
+def init():
+    line.set_data([], [])
+    return line,
 
-        # Plot the data
-        self.ax.plot(self.data)
+# Define animation function
+def animate(i):
+    x = np.linspace(0, 10, 1000)
+    y = np.sin(x + i) + x
+    line.set_data(x, y)
+    return line,
 
-    def animation(self):
-        # Create an animation object to update the plot every 100ms
-        self.ani = FuncAnimation(self.fig, self.update, interval=100)
+# Create animation object
+ani = FuncAnimation(fig, animate, frames=5000, interval=100, init_func=init, blit=True)
 
-        # Show the plot
-        plt.show()
+# Show the plot
+plt.show()
 
 
-plot = CreatePlot()
-plot.animation()
