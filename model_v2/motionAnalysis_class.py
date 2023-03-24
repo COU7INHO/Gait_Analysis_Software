@@ -66,19 +66,22 @@ class MotionAnalysis:
         
             self.tracking, self.boxes = self.multiTracker.update(self.frame)
     
+    
     def getCenters(self):
         self.sorted_yCoord = []
         self.centers = []
         prev_center = None
+        prev_x = None  
+        first_marker_x = None
 
         for i, newbox in enumerate(self.boxes):
             x = int(newbox[0])
             y = int(newbox[1])
             w = int(newbox[2])
             h = int(newbox[3])
-            
+
             center = (x + w//2, y + h//2)
-            self.y_coord = center[1]
+            self.x_coord, self.y_coord = center[0], center[1]
             self.sorted_yCoord.append((self.y_coord, i))
             self.centers.append((center, i))
             cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
@@ -87,8 +90,21 @@ class MotionAnalysis:
             if self.draw_lines:
                 if prev_center is not None:
                     cv2.line(self.frame, center, prev_center, (255, 255, 0), 2)
-            
+
             prev_center = center
+            
+            if i == 0:  
+                first_marker_x = x
+            prev_x = x
+        
+        direction = ""
+        if first_marker_x is not None and prev_x is not None:
+            if first_marker_x < prev_x:
+                direction = "Left -> Right"
+            elif first_marker_x > prev_x:
+                direction = "Right -> Left"
+        cv2.putText(self.frame, direction, (10, 370),cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+
 
     def calcAngles(self):
         self.sorted_yCoord = sorted(self.sorted_yCoord, key=lambda x: x[0])
@@ -161,9 +177,11 @@ class MotionAnalysis:
         
         self.counting += 1
 
+
     def timeStop(self):
         self.fps = 1/(time() - self.loop_time)
         self.loop_time = time()
+
 
     def plotAngles(self):
         if len(self.boxes) == self.n_markers :
@@ -178,11 +196,13 @@ class MotionAnalysis:
                 print(angle)
             plt.ioff()
 
+
     def displayWindow(self):
         cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
         cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
         cv2.imshow('Gait analysis', self.frame)
         cv2.waitKey(1)
+
 
     def closeWindow(self):
         self.camera.release()

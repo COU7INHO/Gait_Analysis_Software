@@ -60,7 +60,7 @@ de se encontrar novas bounding boxes iniciais
 import cv2
 import numpy as np
 from time import time
-from detector_function import markerDetection, firstBBox
+from detector_function import markerDetection
 
 #camera = cv2.VideoCapture("/Users/tiagocoutinho/Desktop/3markers.mov")
 camera = cv2.VideoCapture(0)
@@ -72,7 +72,7 @@ ret, frame = camera.read()
 frame, boxes, indexes = markerDetection(frame)
 
 # Method to draw the bounding boxes in each detected marker
-firstBBox(frame, boxes, indexes)
+#firstBBox(frame, boxes, indexes)
 
 # Create the multiTracker to track multiple markers
 multiTracker = cv2.legacy.MultiTracker_create()
