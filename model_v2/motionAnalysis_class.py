@@ -3,17 +3,14 @@ import cv2
 import numpy as np
 from time import time
 from detection_class import MarkerDetection
-from calc_angles import CalcAngles
 import matplotlib.pyplot as plt
 
 class MotionAnalysis:
-    def __init__(self, cameraID, window_name, n_markers=5, labels = True, draw_lines = True):
+    def __init__(self, cameraID, window_name, n_markers=5):
         self.cameraID = cameraID
         self.window_name = window_name
         self.names = ["Shoulder", "Trochanter", "Knee", "Ankle", "V_Metatarsal"]
         self.n_markers = n_markers
-        self.labels = labels
-        self.draw_lines = draw_lines
         self.first_ankle_angle = []
         self.angle_stored = False
         self.hip_angles = []
@@ -70,7 +67,6 @@ class MotionAnalysis:
     def getCenters(self):
         self.sorted_yCoord = []
         self.centers = []
-        prev_center = None
         prev_x = None  
         first_marker_x = None
 
@@ -87,12 +83,6 @@ class MotionAnalysis:
             cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
             cv2.circle(self.frame, center, 6, (255, 0, 0), -1)
 
-            if self.draw_lines:
-                if prev_center is not None:
-                    cv2.line(self.frame, center, prev_center, (255, 255, 0), 2)
-
-            prev_center = center
-            
             if i == 0:  
                 first_marker_x = x
             prev_x = x
@@ -107,76 +97,71 @@ class MotionAnalysis:
 
 
     def calcAngles(self):
+        self.gt_center = []
         self.sorted_yCoord = sorted(self.sorted_yCoord, key=lambda x: x[0])
 
         prev_x = 0
         prev_y = 0
 
-        trunk_angles = []
-        thigh_angles = []
-        shank_angles = []
-        foot_angles = []
-
-        for i, (self.y_coord, marker_id) in enumerate(self.sorted_yCoord):
-            if i < len(self.names):
-                name = self.names[i]
-            else:
-                name = f"Marker {i}"
-
+        for i, (self.y_coord, _) in enumerate(self.sorted_yCoord):
+  
+            distance = 160
             if prev_x != 0 and prev_y != 0:
-                trunk_angle = CalcAngles(i, 0, 1, trunk_angles, self.centers, prev_x, prev_y)
-                trunk_angle.getAngle()
+                x_gt = self.centers[1][0][0]
+                y_gt = self.centers[1][0][1]
+                x_le = self.centers[2][0][0]
+                y_le = self.centers[2][0][1]
+                alpha = np.arctan((x_gt - x_le)/(y_gt - y_le))
+                new_x = int(-distance * np.sin(alpha) + x_gt)
+                new_y = int(-distance * np.cos(alpha) + y_gt)
+                self.gt_center.append((new_x, new_y))
 
-                thigh_angle = CalcAngles(i, 1, 2, thigh_angles, self.centers, prev_x, prev_y)
-                thigh_angle.getAngle()
-                
-                shank_angle = CalcAngles(i, 2, 3, shank_angles, self.centers, prev_x, prev_y)
-                shank_angle.getAngle()
-
-                if i > 3 and i <= 4:
-                    if (self.centers[i][0][1] - prev_y) != 0:
-                        foot_angle = np.degrees(np.arctan((self.centers[i][0][0] - prev_x)/(self.centers[i][0][1] - prev_y)))
-                        if foot_angle >= -180:
-                            foot_angle = 180 - foot_angle
-                        foot_angles.append(foot_angle)
-    
+                cv2.circle(self.frame, (new_x, new_y), 10, (0, 0, 255), -1)
+            
             prev_x = self.centers[i][0][0]
             prev_y = self.centers[i][0][1]
 
-            for trunk_ang, thigh_ang, shank_ang, foot_ang in zip(trunk_angles, thigh_angles, shank_angles, foot_angles):
-                self.hip_angle = thigh_ang - trunk_ang
-                self.knee_angle = thigh_ang - shank_ang
-                self.ankle_angle = foot_ang - shank_ang - 90
-
-                if self.ankle_angle > 90 and self.ankle_angle < 180:
-                    self.ankle_angle -= 180
-
-                if len(self.boxes) == self.n_markers and self.angle_stored == False:
-                    self.first_ankle_angle.append(self.ankle_angle)
-                    self.angle_stored = True
-
-                if len(self.first_ankle_angle) > 0:
-                    self.ankle_angle -= self.first_ankle_angle[0]
-
-                cv2.putText(self.frame, f"Hip Angle: {round(self.hip_angle, 2)}", (10, 240),cv2.FONT_HERSHEY_COMPLEX, 1, (20, 255, 217), 2)
-                cv2.putText(self.frame, f"Knee Angle: {round(self.knee_angle, 2)}", (10, 280),cv2.FONT_HERSHEY_COMPLEX, 1, (20, 255, 217), 2)
-                cv2.putText(self.frame, f"Ankle Angle: {round(self.ankle_angle, 2)}", (10, 320),cv2.FONT_HERSHEY_COMPLEX, 1, (20, 255, 217), 2)
-                
-                self.hip_angles.append(self.hip_angle)
-                self.knee_angles.append(self.knee_angle)
-                self.ankle_angles.append(self.ankle_angle)
-
-            if self.labels:
-                for j, newbox in enumerate(self.boxes):
-                    if j == marker_id:
-                        x = int(newbox[0])
-                        y = int(newbox[1])
-                        w = int(newbox[2])
-                        h = int(newbox[3])
-                        cv2.putText(self.frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 128), 1)
-        
         self.counting += 1
 
+    def lines(self, showLines=True):
+
+        if showLines:
+            points = []
+            for i in range(len(self.centers)):
+                if i == 1:
+                    continue
+                x, y = self.centers[i][0][0], self.centers[i][0][1]
+                points.append((x, y))
+                
+            for center in self.gt_center:
+                points.append((center[0], center[1]))
+
+            points.sort(key=lambda point: point[1])
+            unique_points = {}
+            for point in points:
+                if point not in unique_points:
+                    unique_points[point] = point
+
+            self.unique_points_list = list(unique_points.values())
+            print(self.unique_points_list)
+
+            for i in range(1, len(points)):
+                cv2.line(self.frame, points[i], points[i-1], (0, 255, 0), 3)
+
+
+    def writeLabels(self, showLabels=True):
+
+        if showLabels:
+            for idx, point in enumerate(self.unique_points_list):
+                if idx < len(self.names):
+                    name = self.names[idx]
+                else:
+                    name = f"Marker {idx}"
+
+                x = point[0]
+                y = point[1]
+                cv2.putText(self.frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 255, 255), 2)
+        
 
     def timeStop(self):
         self.fps = 1/(time() - self.loop_time)
@@ -200,6 +185,7 @@ class MotionAnalysis:
     def displayWindow(self):
         cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
         cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
+
         cv2.imshow('Gait analysis', self.frame)
         cv2.waitKey(1)
 

@@ -2,12 +2,12 @@ import cv2
 from motionAnalysis_class import MotionAnalysis
 
 
-obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/espelho.mov", "Motion Analysis")
+obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/ciclo.mov", "Motion Analysis")
 
 obj.openCamera()
 obj.timeInit()
 obj.getFrame()
-obj.trackerInit()
+obj.trackerInit()      
 
 while True:
     obj.getFrame()
@@ -15,6 +15,8 @@ while True:
     obj.checkMarkers()
     obj.getCenters()  
     obj.calcAngles()
+    obj.lines()
+    obj.writeLabels()
     obj.timeStop()
     obj.displayWindow()
 
