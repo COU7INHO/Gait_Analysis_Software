@@ -25,7 +25,6 @@ class MotionAnalysis:
         self.init_angle_ang = None
         self.filtered_ankle_angles = []
 
-
     def openCamera(self):
         self.camera = cv2.VideoCapture(self.cameraID)
     
@@ -69,7 +68,6 @@ class MotionAnalysis:
             cv2.putText(self.frame, "Tracking", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 3)
         
             self.tracking, self.boxes = self.multiTracker.update(self.frame)
-    
     
     def getCenters(self):
         self.sorted_centers = []
@@ -141,34 +139,30 @@ class MotionAnalysis:
                 foot_angle = np.degrees(np.arctan((self.centers[4][0][1] - self.centers[3][0][1])/(self.centers[4][0][0] - self.centers[3][0][0])))
 
                 #* hip_ang
-                hip_ang = thigh_angle - trunk_angle
-                if hip_ang > 0:
-                    hip_ang = 90 - hip_ang
-                elif hip_ang < 0:
-                    hip_ang = abs(hip_ang) - 90
 
-                #self.hip_angles.append(hip_ang)
-                #s = pd.Series(self.hip_angles)
-
-                #with pd.ExcelWriter('hip_angles.xlsx') as writer:
-                #    s.to_excel(writer, sheet_name='Sheet1', startrow=0, index=False)
+                hip_ang = trunk_angle - thigh_angle 
                 
+                if hip_ang > 0:
+                    hip_ang -= 90
+                elif hip_ang <= 0:
+                    hip_ang += 90
+                if abs(hip_ang) <= 40:
+                    self.hip_angles.append(hip_ang)
+
                 cv2.putText(self.frame, f"Hip angle = {str(round(hip_ang, 2))}", (10, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
                 
                 #* knee_ang
                 knee_ang = thigh_angle - shank_angle
-                if knee_ang < 0:
-                    knee_ang = abs(knee_ang)
-                elif knee_ang > 0:
+  
+                if knee_ang > 100:
                     knee_ang = 180 - knee_ang
+                elif knee_ang < 0:
+                    knee_ang = abs(knee_ang)
+                else:
+                    continue
 
-                self.knee_angles = list(self.knee_angles)
                 self.knee_angles.append(knee_ang)
-                self.knee_angles = remove_outliers(self.knee_angles)
-                #self.knee_angles = filter_angles(self.knee_angles)
-                #AnalyseData(self.knee_angles, "Knee angles").save_data()
-
-
+                
                 cv2.putText(self.frame, f"Knee angle = {str(round(knee_ang, 2))}", (10, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
 
                 #* ankle_ang
@@ -180,12 +174,8 @@ class MotionAnalysis:
                 elif ankle_ang > 0:
                     ankle_ang = 180 - ankle_ang + self.init_angle_ang
 
-                self.ankle_angles = list(self.ankle_angles)
                 self.ankle_angles.append(ankle_ang)
 
-                self.ankle_angles = remove_outliers(self.ankle_angles)
-
-                #save_data(self.ankle_angles,"Ankle angles", save=False)
 
                 cv2.putText(self.frame, f"Ankle angle = {str(round(ankle_ang, 2))}", (10, 240), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
                 cv2.circle(self.frame, (new_x, new_y), 10, (0, 0, 255), -1)
@@ -233,10 +223,9 @@ class MotionAnalysis:
         self.loop_time = time()
         cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
 
-
     def plotAngles(self):
+        AnalyseData(self.hip_angles, "Hip angles").plot_data("Hip angle")
         AnalyseData(self.knee_angles, "Knee angles").plot_data("Knee angle")
-        print(self.knee_angles)
 
     def displayWindow(self):
         cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)

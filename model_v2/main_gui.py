@@ -131,7 +131,7 @@ class MainWindow(QWidget):
         self.line.set_color('blue')  
         self.line.set_linestyle('-') 
         self.ax.set_xlim([0, max(self.x_history)])  # Set the x-axis limit from zero to the maximum value in x_history
-        self.ax.set_ylim([-10, 20])  # Replace y_min and y_max with your desired limits
+        #self.ax.set_ylim([-20, 30])  # Replace y_min and y_max with your desired limits
         self.ax.autoscale_view()
         self.canvas.draw()
 

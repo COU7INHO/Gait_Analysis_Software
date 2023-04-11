@@ -22,6 +22,6 @@ while True:
 
     if cv2.waitKey(1) == ord('q'):
         break
-    
+
 obj.closeWindow()
 cv2.destroyAllWindows()
