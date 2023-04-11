@@ -20,8 +20,8 @@ while True:
     obj.timeStop()
     obj.displayWindow()
 
-    key = cv2.waitKey(1)
-    if key == ord('q'):
+    if cv2.waitKey(1) == ord('q'):
         break
-
+    
 obj.closeWindow()
+cv2.destroyAllWindows()

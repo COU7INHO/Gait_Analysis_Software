@@ -6,7 +6,7 @@ from detection_class import MarkerDetection
 import matplotlib.pyplot as plt
 import pandas as pd
 from filter_function import filter_angles
-from save_in_file import save_data
+from save_in_file import AnalyseData 
 from outliers import remove_outliers
 
 
@@ -24,7 +24,6 @@ class MotionAnalysis:
         self.counting = 0
         self.init_angle_ang = None
         self.filtered_ankle_angles = []
-
 
 
     def openCamera(self):
@@ -103,7 +102,6 @@ class MotionAnalysis:
                 direction = "Right -> Left"
         cv2.putText(self.frame, direction, (10, 370),cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
-
     def calcAngles(self):
         self.gt_center = []
         self.sorted_centers = sorted(self.sorted_centers, key=lambda x: x[0][1])
@@ -167,8 +165,9 @@ class MotionAnalysis:
                 self.knee_angles = list(self.knee_angles)
                 self.knee_angles.append(knee_ang)
                 self.knee_angles = remove_outliers(self.knee_angles)
-                self.knee_angles = filter_angles(self.knee_angles)
-                save_data(self.knee_angles, "Knee angles", save=True)
+                #self.knee_angles = filter_angles(self.knee_angles)
+                #AnalyseData(self.knee_angles, "Knee angles").save_data()
+
 
                 cv2.putText(self.frame, f"Knee angle = {str(round(knee_ang, 2))}", (10, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
 
@@ -184,7 +183,7 @@ class MotionAnalysis:
                 self.ankle_angles = list(self.ankle_angles)
                 self.ankle_angles.append(ankle_ang)
 
-                #self.ankle_angles = remove_outliers(self.ankle_angles)
+                self.ankle_angles = remove_outliers(self.ankle_angles)
 
                 #save_data(self.ankle_angles,"Ankle angles", save=False)
 
@@ -195,7 +194,6 @@ class MotionAnalysis:
             prev_y = self.centers[i][0][1]
 
         self.counting += 1
-
 
     def lines(self, showLines=True):
         if showLines:
@@ -220,7 +218,6 @@ class MotionAnalysis:
             for i in range(1, len(points)):
                 cv2.line(self.frame, points[i], points[i-1], (0, 255, 0), 3)
 
-
     def writeLabels(self, showLabels=True):
         if showLabels:
             for idx, point in enumerate(self.unique_points_list):
@@ -230,32 +227,22 @@ class MotionAnalysis:
                 x = point[0]
                 y = point[1]
                 cv2.putText(self.frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 255, 255), 2)
-        
 
     def timeStop(self):
         self.fps = 1/(time() - self.loop_time)
         self.loop_time = time()
+        cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
 
 
     def plotAngles(self):
-        if len(self.boxes) == self.n_markers :
-            plt.ion()
-            fig, ax = plt.subplots()
-            for angle in self.hip_angles:
-                y = self.counting
-                x = angle
-                ax.plot(x, y, '-')
-                ax.set_title("Hip angle")
-                plt.draw()
-                print(angle)
-            plt.ioff()
-
+        AnalyseData(self.knee_angles, "Knee angles").plot_data("Knee angle")
+        print(self.knee_angles)
 
     def displayWindow(self):
         cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
         cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
-
-        cv2.imshow('Gait analysis', self.frame)
+        if self.frame.shape[0] > 0 and self.frame.shape[1] > 0:
+            cv2.imshow('Gait analysis', self.frame)
         cv2.waitKey(1)
 
     def closeWindow(self):
