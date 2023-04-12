@@ -20,6 +20,7 @@ class MotionAnalysis:
         self.counting = 0
         self.init_angle_ang = None
         self.filtered_ankle_angles = []
+        self.direction = "left_to_right"
 
     def openCamera(self):
         self.camera = cv2.VideoCapture(self.cameraID)
@@ -136,7 +137,6 @@ class MotionAnalysis:
                 foot_angle = np.degrees(np.arctan((self.centers[4][0][1] - self.centers[3][0][1])/(self.centers[4][0][0] - self.centers[3][0][0])))
 
                 #* hip_ang
-
                 hip_ang = trunk_angle - thigh_angle 
                 
                 if hip_ang > 0:
@@ -145,7 +145,7 @@ class MotionAnalysis:
                     hip_ang += 90
                 if abs(hip_ang) <= 40:
                     self.hip_angles.append(hip_ang)
-
+    
                 #cv2.putText(self.frame, f"Hip angle = {str(round(hip_ang, 2))}", (10, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
                 
                 #* knee_ang
@@ -172,7 +172,6 @@ class MotionAnalysis:
                     ankle_ang = 180 - ankle_ang + self.init_angle_ang
 
                 self.ankle_angles.append(ankle_ang)
-
 
                 #cv2.putText(self.frame, f"Ankle angle = {str(round(ankle_ang, 2))}", (10, 240), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
                 cv2.circle(self.frame, (new_x, new_y), 10, (0, 0, 255), -1)

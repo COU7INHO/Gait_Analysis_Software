@@ -2,7 +2,7 @@ import cv2
 from motionAnalysis_class import MotionAnalysis
 
 
-obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/espelho.mov", "Motion Analysis")
+obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/ciclo.mov", "Motion Analysis")
 
 obj.openCamera()
 obj.timeInit()

@@ -2,7 +2,7 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow
 from PyQt5.QtGui import QImage, QPixmap
 
 import matplotlib.pyplot as plt
@@ -66,7 +66,7 @@ class VideoData(QLabel):
              final_angle = angle
         return final_angle
     
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
@@ -84,10 +84,44 @@ class MainWindow(QWidget):
         self.setWindowTitle("Gait analysis")
         self.setGeometry(30, 40, 1600, 800)
 
+        menu_bar = self.menuBar()
+
+        file_menu = QMenu("File", self)
+        menu_bar.addMenu(file_menu)
+
+        new_analysis = QAction("New analysis", self)
+        file_menu.addAction(new_analysis)
+
+        adv_settings_action = QAction("Advanced settings", self)
+        file_menu.addAction(adv_settings_action)
+
+        view_menu = QMenu("View", self)
+        menu_bar.addMenu(view_menu)
+
+        view_labels_action = QAction("View labels", self)
+        view_menu.addAction(view_labels_action)
+
+        view_bboxes_action = QAction("View bounding boxes", self)
+        view_menu.addAction(view_bboxes_action)
+
+        view_lines_action = QAction("View lines", self)
+        view_menu.addAction(view_lines_action)
+
+        help_menu = QMenu("Help", self)
+        menu_bar.addMenu(help_menu)
+
+        docs_action = QAction("Documentation", self)
+        help_menu.addAction(docs_action)
+
+
         main_layout = QHBoxLayout()
 
         plot_frame = QFrame()
         plot_frame.setFrameShape(QFrame.StyledPanel)
+
+        main_widget = QWidget()
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
 
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
@@ -246,6 +280,7 @@ class MainWindow(QWidget):
             self.ankle_angle_label.setText(f"Current ankle angle: {round(y, 2)}°")
 
             self.findMaxMin("Ankle")
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
