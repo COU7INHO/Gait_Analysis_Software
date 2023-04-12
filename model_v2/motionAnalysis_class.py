@@ -3,11 +3,8 @@ import cv2
 import numpy as np
 from time import time
 from detection_class import MarkerDetection
-import matplotlib.pyplot as plt
-import pandas as pd
 from filter_function import filter_angles
-from save_in_file import AnalyseData 
-from outliers import remove_outliers
+
 
 
 class MotionAnalysis:
@@ -98,7 +95,7 @@ class MotionAnalysis:
                 direction = "Left -> Right"
             elif first_marker_x > prev_x:
                 direction = "Right -> Left"
-        cv2.putText(self.frame, direction, (10, 370),cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+        #cv2.putText(self.frame, direction, (10, 370),cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
     def calcAngles(self):
         self.gt_center = []
@@ -149,7 +146,7 @@ class MotionAnalysis:
                 if abs(hip_ang) <= 40:
                     self.hip_angles.append(hip_ang)
 
-                cv2.putText(self.frame, f"Hip angle = {str(round(hip_ang, 2))}", (10, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
+                #cv2.putText(self.frame, f"Hip angle = {str(round(hip_ang, 2))}", (10, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
                 
                 #* knee_ang
                 knee_ang = thigh_angle - shank_angle
@@ -163,7 +160,7 @@ class MotionAnalysis:
 
                 self.knee_angles.append(knee_ang)
                 
-                cv2.putText(self.frame, f"Knee angle = {str(round(knee_ang, 2))}", (10, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
+                #cv2.putText(self.frame, f"Knee angle = {str(round(knee_ang, 2))}", (10, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
 
                 #* ankle_ang
                 ankle_ang = foot_angle - shank_angle 
@@ -177,7 +174,7 @@ class MotionAnalysis:
                 self.ankle_angles.append(ankle_ang)
 
 
-                cv2.putText(self.frame, f"Ankle angle = {str(round(ankle_ang, 2))}", (10, 240), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
+                #cv2.putText(self.frame, f"Ankle angle = {str(round(ankle_ang, 2))}", (10, 240), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 3)
                 cv2.circle(self.frame, (new_x, new_y), 10, (0, 0, 255), -1)
 
             prev_x = self.centers[i][0][0]
@@ -223,16 +220,12 @@ class MotionAnalysis:
         self.loop_time = time()
         cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
 
-    def plotAngles(self):
-        AnalyseData(self.hip_angles, "Hip angles").plot_data("Hip angle")
-        AnalyseData(self.knee_angles, "Knee angles").plot_data("Knee angle")
-
     def displayWindow(self):
-        cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
-        cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
+        #cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
+        #cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
         if self.frame.shape[0] > 0 and self.frame.shape[1] > 0:
             cv2.imshow('Gait analysis', self.frame)
-        cv2.waitKey(1)
+        cv2.waitKey(int(1000/120))
 
     def closeWindow(self):
         self.camera.release()

@@ -61,6 +61,7 @@ class VideoData(QLabel):
         else:
             raise ValueError("Invalid angle")
 
+        final_angle = 0
         for angle in angles:
              final_angle = angle
         return final_angle
@@ -69,7 +70,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.webcam_widget = VideoData()
+        self.video_widget = VideoData()
         self.init_ui()
 
         self.x_history = []
@@ -81,7 +82,7 @@ class MainWindow(QWidget):
 
     def init_ui(self):
         self.setWindowTitle("Gait analysis")
-        self.setGeometry(100, 100, 1600, 480)
+        self.setGeometry(30, 40, 1600, 800)
 
         main_layout = QHBoxLayout()
 
@@ -91,9 +92,9 @@ class MainWindow(QWidget):
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
 
-        v_layout = QVBoxLayout()
-        v_layout.addWidget(self.canvas)
-        plot_frame.setLayout(v_layout)
+        plot_layout = QVBoxLayout()
+        plot_layout.addWidget(self.canvas)
+        plot_frame.setLayout(plot_layout)
 
         self.ax = self.figure.add_subplot(311)
         self.ax.set_ylabel("Angle (degrees)")
@@ -115,64 +116,136 @@ class MainWindow(QWidget):
 
         main_layout.addWidget(plot_frame)
 
-        webcam_frame = QFrame()
-        webcam_frame.setFrameShape(QFrame.StyledPanel)
+        video_frame = QFrame()
+        video_frame.setFrameShape(QFrame.StyledPanel)
 
-        webcam_layout = QVBoxLayout()
+        video_frame_layout = QVBoxLayout()
+        video_frame_layout.addWidget(self.video_widget)
+        video_frame.setLayout(video_frame_layout)
 
-        webcam_layout.addWidget(self.webcam_widget)
-        webcam_frame.setLayout(webcam_layout)
-        main_layout.addWidget(webcam_frame)
+        video_info_frame = QFrame()
+        video_info_frame.setFrameShape(QFrame.StyledPanel)
+        video_info_layout = QVBoxLayout()
+
+        self.hip_angle_label = QLabel()
+        self.knee_angle_label = QLabel()
+        self.ankle_angle_label = QLabel()
+        
+        self.max_hip = QLabel()
+        self.min_hip = QLabel()
+        self.max_knee = QLabel()
+        self.min_knee = QLabel()
+        self.max_ankle = QLabel()
+        self.min_ankle = QLabel()
+
+        video_info_layout.addWidget(self.hip_angle_label)
+        video_info_layout.addWidget(self.max_hip)
+        video_info_layout.addWidget(self.min_hip)
+        video_info_layout.addWidget(self.knee_angle_label)
+        video_info_layout.addWidget(self.max_knee)
+        video_info_layout.addWidget(self.min_knee)
+        video_info_layout.addWidget(self.ankle_angle_label)
+        video_info_layout.addWidget(self.max_ankle)
+        video_info_layout.addWidget(self.min_ankle)
+
+        video_info_frame.setLayout(video_info_layout)
+        video_frame_layout.addWidget(video_info_frame)
+
+        main_layout.addWidget(video_frame)
 
         self.setLayout(main_layout)
 
         self.timer = QTimer()
-        self.timer.timeout.connect(lambda: self.update_plot("Hip"))
-        self.timer.start(1)
+        self.timer.timeout.connect(lambda: self.update_values("Hip"))
+        self.timer.start(int(1000/120))
 
         self.timer2 = QTimer()
-        self.timer2.timeout.connect(lambda: self.update_plot("Knee"))
-        self.timer2.start(1)
+        self.timer2.timeout.connect(lambda: self.update_values("Knee"))
+        self.timer2.start(int(1000/120))
 
         self.timer3 = QTimer()
-        self.timer3.timeout.connect(lambda: self.update_plot("Ankle"))
-        self.timer3.start(1)
+        self.timer3.timeout.connect(lambda: self.update_values("Ankle"))
+        self.timer3.start(int(1000/120))
+    
+    def findMaxMin(self, joint:str):
+        max_y = float('-inf')
+        min_y = float('inf')
         
-    def update_plot(self, angle:str):
+        if joint == "Hip":
+            y_history = self.y_history
+        elif joint == "Knee":
+            y_history = self.y_history2
+        elif joint == "Ankle":
+            y_history = self.y_history3
+
+        for y in y_history:
+            if y > max_y:
+                max_y = y  
+            if y < min_y:
+                min_y = y
+        if joint == "Hip":
+            self.max_hip.setText(f"Max: {round(max_y, 2)}°")
+            self.min_hip.setText(f"Min: {round(min_y, 2)}°")
+        elif joint == "Knee":
+            self.max_knee.setText(f"Max: {round(max_y, 2)}°")
+            self.min_knee.setText(f"Min: {round(min_y, 2)}°")
+        elif joint == "Ankle":
+            self.max_ankle.setText(f"Max: {round(max_y, 2)}°")
+            self.min_ankle.setText(f"Min: {round(min_y, 2)}°")
+
+
+    def update_values(self, angle:str):
             
         if angle == "Hip":
-            x = self.webcam_widget.current_frame
-            y = self.webcam_widget.getAngle("Hip")
+            x = self.video_widget.current_frame
+            y = self.video_widget.getAngle("Hip")
             self.x_history.append(x)
             self.y_history.append(y)
             self.line.set_data(self.x_history, self.y_history)
+            self.line.set_color('red')
+            self.line.set_linewidth(2)
             self.ax.relim()
             self.ax.autoscale_view()
             self.ax.set_ylim([-20, 30])
             self.canvas.draw()
 
+            self.hip_angle_label.setText(f"Current hip angle: {round(y, 2)}°")
+
+            self.findMaxMin("Hip")
+
         elif angle == "Knee":
-            x = self.webcam_widget.current_frame
-            y = self.webcam_widget.getAngle("Knee")
+            x = self.video_widget.current_frame
+            y = self.video_widget.getAngle("Knee")
             self.x_history2.append(x)  
             self.y_history2.append(y)  
             self.line2.set_data(self.x_history2, self.y_history2) 
+            self.line2.set_color('blue')
+            self.line2.set_linewidth(2)
             self.ax2.relim() 
             self.ax2.autoscale_view()  
             self.ax2.set_ylim([-5, 70])
             self.canvas.draw()
 
+            self.knee_angle_label.setText(f"Current knee angle: {round(y, 2)}°")
+
+            self.findMaxMin("Knee")
+
         elif angle == "Ankle":
-            x = self.webcam_widget.current_frame
-            y = self.webcam_widget.getAngle("Ankle")
+            x = self.video_widget.current_frame
+            y = self.video_widget.getAngle("Ankle")
             self.x_history3.append(x)  
             self.y_history3.append(y)  
             self.line3.set_data(self.x_history3, self.y_history3) 
+            self.line3.set_color('black')
+            self.line3.set_linewidth(2)
             self.ax3.relim() 
             self.ax3.autoscale_view()  
             self.ax3.set_ylim([-20, 25])
             self.canvas.draw()
-            
+
+            self.ankle_angle_label.setText(f"Current ankle angle: {round(y, 2)}°")
+
+            self.findMaxMin("Ankle")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
