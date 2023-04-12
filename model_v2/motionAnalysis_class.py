@@ -6,7 +6,6 @@ from detection_class import MarkerDetection
 from filter_function import filter_angles
 
 
-
 class MotionAnalysis:
     def __init__(self, cameraID, window_name, n_markers=5):
         self.cameraID = cameraID
@@ -69,8 +68,6 @@ class MotionAnalysis:
     def getCenters(self):
         self.sorted_centers = []
         self.centers = []
-        prev_x = None  
-        first_marker_x = None
 
         for i, newbox in enumerate(self.boxes):
             x = int(newbox[0])
@@ -85,17 +82,20 @@ class MotionAnalysis:
             cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
             cv2.circle(self.frame, center, 6, (255, 0, 0), -1)
 
-            if i == 0:  
-                first_marker_x = x
-            prev_x = x
-        
-        direction = ""
-        if first_marker_x is not None and prev_x is not None:
-            if first_marker_x < prev_x:
-                direction = "Left -> Right"
-            elif first_marker_x > prev_x:
-                direction = "Right -> Left"
-        #cv2.putText(self.frame, direction, (10, 370),cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+    def getDirection(self):
+
+        x_coords = [center[0] for center, _ in self.sorted_centers]
+        mean_x_coord = np.mean(x_coords)
+        self.direction= ""
+        if hasattr(self, 'prev_mean_x_coord'):
+            if mean_x_coord > self.prev_mean_x_coord:
+                self.direction = "left_to_right"
+                print(self.direction)
+            else:
+                self.direction = "right_to_left"
+                print(self.direction)
+
+        self.prev_mean_x_coord = mean_x_coord
 
     def calcAngles(self):
         self.gt_center = []

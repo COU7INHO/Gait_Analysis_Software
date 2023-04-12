@@ -14,6 +14,7 @@ while True:
     obj.removeEmptyBoxes()
     obj.checkMarkers()
     obj.getCenters()  
+    obj.getDirection()
     obj.calcAngles()
     obj.lines()
     obj.writeLabels()
