@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter, QPalette
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -65,7 +65,21 @@ class VideoData(QLabel):
         for angle in angles:
              final_angle = angle
         return final_angle
-    
+
+class GradientFrame(QFrame):
+    def __init__(self, start_color, end_color):
+        super().__init__()
+        self.start_color = start_color
+        self.end_color = end_color
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        rect = self.rect()
+        gradient = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+        gradient.setColorAt(0, self.start_color)
+        gradient.setColorAt(1, self.end_color)
+        painter.fillRect(rect, gradient)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -81,7 +95,11 @@ class MainWindow(QMainWindow):
         self.y_history3 = []
 
     def init_ui(self):
+
+        rgb_plot_frame = [156, 255, 80]
+
         self.setWindowTitle("Gait analysis")
+        self.setWindowIcon(QIcon("logo.png"))
         self.setGeometry(30, 40, 1600, 800)
 
         menu_bar = self.menuBar()
@@ -114,16 +132,24 @@ class MainWindow(QMainWindow):
         help_menu.addAction(docs_action)
 
 
-        main_layout = QHBoxLayout()
 
-        plot_frame = QFrame()
-        plot_frame.setFrameShape(QFrame.StyledPanel)
+        main_layout = QHBoxLayout()
 
         main_widget = QWidget()
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
+        start_color = QColor(rgb_plot_frame[0], rgb_plot_frame[1], rgb_plot_frame[2])
+        end_color = QColor(0, 0, 0)
+        main_widget.setStyleSheet(f"background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {start_color.name()}, stop:1 {end_color.name()});")
+
+        
+        plot_frame = QFrame()
+        plot_frame.setFrameShape(QFrame.StyledPanel)
+        plot_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
 
         self.figure = Figure()
+        self.figure.suptitle("Joint Angles", fontsize=16, fontweight='bold')
+
         self.canvas = FigureCanvas(self.figure)
 
         plot_layout = QVBoxLayout()
@@ -145,13 +171,17 @@ class MainWindow(QMainWindow):
         self.ax3 = self.figure.add_subplot(313)
         self.ax3.set_xlabel("Frame")
         self.ax3.set_ylabel("Angle (degrees)")
-        self.ax3.set_title("Hip angle")
+        self.ax3.set_title("Ankle angle")
         self.line3, = self.ax3.plot([], [])
+        
+        facecolor = (rgb_plot_frame[0] / 255, rgb_plot_frame[1] / 255, rgb_plot_frame[2] / 255)
+        self.figure.set_facecolor(facecolor)
 
         main_layout.addWidget(plot_frame)
 
         video_frame = QFrame()
         video_frame.setFrameShape(QFrame.StyledPanel)
+        video_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
 
         video_frame_layout = QVBoxLayout()
         video_frame_layout.addWidget(self.video_widget)
@@ -159,6 +189,12 @@ class MainWindow(QMainWindow):
 
         video_info_frame = QFrame()
         video_info_frame.setFrameShape(QFrame.StyledPanel)
+        #video_info_frame.setStyleSheet(f"background-color: rgb(200, 255, 155);")  
+        start_color = QColor(156, 255, 80)
+        end_color = QColor(255, 255, 255)
+        video_info_frame = GradientFrame(start_color, end_color)
+        video_info_frame.setFrameShape(QFrame.StyledPanel)
+
         video_info_layout = QVBoxLayout()
 
         self.hip_angle_label = QLabel()
@@ -182,12 +218,22 @@ class MainWindow(QMainWindow):
         video_info_layout.addWidget(self.max_ankle)
         video_info_layout.addWidget(self.min_ankle)
 
+        self.hip_angle_label.setStyleSheet("background-color: transparent;")
+        self.knee_angle_label.setStyleSheet("background-color: transparent;")
+        self.ankle_angle_label.setStyleSheet("background-color: transparent;")
+        self.max_hip.setStyleSheet("background-color: transparent;")
+        self.min_hip.setStyleSheet("background-color: transparent;")
+        self.max_knee.setStyleSheet("background-color: transparent;")
+        self.min_knee.setStyleSheet("background-color: transparent;")
+        self.max_ankle.setStyleSheet("background-color: transparent;")
+        self.min_ankle.setStyleSheet("background-color: transparent;")
+
         video_info_frame.setLayout(video_info_layout)
         video_frame_layout.addWidget(video_info_frame)
 
         main_layout.addWidget(video_frame)
 
-        self.setLayout(main_layout)
+        #self.setLayout(main_layout)
 
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.update_values("Hip"))
@@ -226,7 +272,6 @@ class MainWindow(QMainWindow):
         elif joint == "Ankle":
             self.max_ankle.setText(f"Max: {round(max_y, 2)}°")
             self.min_ankle.setText(f"Min: {round(min_y, 2)}°")
-
 
     def update_values(self, angle:str):
             
