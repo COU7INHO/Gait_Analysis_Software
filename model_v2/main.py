@@ -16,6 +16,7 @@ while True:
     obj.getCenters()  
     obj.getDirection()
     obj.calcAngles()
+    obj.px_to_cm(20)
     obj.lines()
     obj.writeLabels()
     obj.timeStop()

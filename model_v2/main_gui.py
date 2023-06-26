@@ -2,8 +2,9 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QLineEdit, QPushButton, QComboBox
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter, QPalette
+from PyQt5.QtCore import pyqtSignal
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -11,7 +12,7 @@ from matplotlib.figure import Figure
 
 import cv2
 from motionAnalysis_class import MotionAnalysis
-
+from info_gui import AmputeeDataInput
 
 class VideoData(QLabel):
     def __init__(self):
@@ -23,8 +24,8 @@ class VideoData(QLabel):
         self.init_video.timeInit()
         self.init_video.getFrame()
         self.init_video.trackerInit() 
-
-        self.setMaximumSize(800, 480)
+        video_scaling_factor = 2.5
+        self.setMaximumSize(1920/video_scaling_factor, 1080/video_scaling_factor)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
@@ -84,6 +85,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+
         self.video_widget = VideoData()
         self.init_ui()
 
@@ -95,13 +97,13 @@ class MainWindow(QMainWindow):
         self.y_history3 = []
 
     def init_ui(self):
+        WINDOW_HEIGHT = 800
+        WINDOW_WIDTH = 1500
 
         rgb_plot_frame = [156, 255, 80]
 
         self.setWindowTitle("Gait analysis")
-        self.setWindowIcon(QIcon("logo.png"))
-        self.setGeometry(30, 40, 1600, 800)
-
+        self.setGeometry(30, 40, WINDOW_WIDTH, WINDOW_HEIGHT)
         menu_bar = self.menuBar()
 
         file_menu = QMenu("File", self)
@@ -132,6 +134,9 @@ class MainWindow(QMainWindow):
         help_menu.addAction(docs_action)
 
 
+#* ############################### FRAMES ###############################
+        
+#* ############################### Main frame ###############################
 
         main_layout = QHBoxLayout()
 
@@ -142,8 +147,10 @@ class MainWindow(QMainWindow):
         end_color = QColor(0, 0, 0)
         main_widget.setStyleSheet(f"background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {start_color.name()}, stop:1 {end_color.name()});")
 
-        
+#* ############################### Plot frame ###############################
+
         plot_frame = QFrame()
+        
         plot_frame.setFrameShape(QFrame.StyledPanel)
         plot_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
 
@@ -176,20 +183,43 @@ class MainWindow(QMainWindow):
         
         facecolor = (rgb_plot_frame[0] / 255, rgb_plot_frame[1] / 255, rgb_plot_frame[2] / 255)
         self.figure.set_facecolor(facecolor)
+        plot_frame.setFixedSize(400, WINDOW_HEIGHT)
 
         main_layout.addWidget(plot_frame)
+
+#* ############################### Central frame ###############################
+
+        person_info_frame = QFrame()
+        person_info_frame.setFrameShape(QFrame.StyledPanel)
+        person_info_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
+        
+        person_info_layout = QHBoxLayout()
+        self.name = QLabel()
+        self.amp_level = QLabel()
+        self.amp_side = QLabel()
+        #self.name.setText(f"Name: {self.name}")
+        #self.amp_level.setText(f"Amp.level: {self.amputation_level}")
+        #self.amp_side.setText(f"Amp.limb: {self.amputated_limb}")
+
+        person_info_layout.addWidget(self.name)
+        person_info_layout.addWidget(self.amp_level)
+        person_info_layout.addWidget(self.amp_side)
+
+        person_info_frame.setLayout(person_info_layout)
+
 
         video_frame = QFrame()
         video_frame.setFrameShape(QFrame.StyledPanel)
         video_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
 
         video_frame_layout = QVBoxLayout()
+        video_frame_layout.addWidget(person_info_frame)
         video_frame_layout.addWidget(self.video_widget)
+        video_frame_layout.setAlignment(Qt.AlignCenter)  # Set the alignment of the layout to center the video widget
         video_frame.setLayout(video_frame_layout)
 
         video_info_frame = QFrame()
         video_info_frame.setFrameShape(QFrame.StyledPanel)
-        #video_info_frame.setStyleSheet(f"background-color: rgb(200, 255, 155);")  
         start_color = QColor(156, 255, 80)
         end_color = QColor(255, 255, 255)
         video_info_frame = GradientFrame(start_color, end_color)
@@ -229,11 +259,64 @@ class MainWindow(QMainWindow):
         self.min_ankle.setStyleSheet("background-color: transparent;")
 
         video_info_frame.setLayout(video_info_layout)
+        
         video_frame_layout.addWidget(video_info_frame)
+
+        video_frame.setFixedHeight(WINDOW_HEIGHT)
 
         main_layout.addWidget(video_frame)
 
-        #self.setLayout(main_layout)
+
+#* ############################### devi_info_frame ###############################
+        
+        devi_info_frame = QFrame()
+        devi_info_frame.setFrameShape(QFrame.StyledPanel)
+        devi_info_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+
+        devi_info_layout = QVBoxLayout()
+        devi_info_frame.setLayout(devi_info_layout)
+
+        # Actions frame
+        actions_frame = QFrame()
+        actions_frame.setFrameShape(QFrame.StyledPanel)
+        actions_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+
+        actions_label = QLabel("Actions")
+
+        actions_layout = QVBoxLayout()
+        actions_layout.addWidget(actions_label)
+        actions_frame.setLayout(actions_layout)
+
+        # Deviations frame
+        deviations_frame = QFrame()
+        deviations_frame.setFrameShape(QFrame.StyledPanel)
+        deviations_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+
+        deviations_label = QLabel("Deviations")
+
+        deviations_layout = QVBoxLayout()
+        deviations_layout.addWidget(deviations_label)
+        deviations_frame.setLayout(deviations_layout)
+
+        # Corrections frame
+        corrections_frame = QFrame()
+        corrections_frame.setFrameShape(QFrame.StyledPanel)
+        corrections_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+
+        corrections_label = QLabel("Corrections")
+
+        corrections_layout = QVBoxLayout()
+        corrections_layout.addWidget(corrections_label)
+        corrections_frame.setLayout(corrections_layout)
+
+        # Add frames to the vertical layout
+        devi_info_layout.addWidget(actions_frame)
+        devi_info_layout.addWidget(deviations_frame)
+        devi_info_layout.addWidget(corrections_frame)
+
+        devi_info_frame.setFixedSize(400, WINDOW_HEIGHT)
+
+        main_layout.addWidget(devi_info_frame)
 
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.update_values("Hip"))
@@ -263,6 +346,7 @@ class MainWindow(QMainWindow):
                 max_y = y  
             if y < min_y:
                 min_y = y
+
         if joint == "Hip":
             self.max_hip.setText(f"Max: {round(max_y, 2)}°")
             self.min_hip.setText(f"Min: {round(min_y, 2)}°")

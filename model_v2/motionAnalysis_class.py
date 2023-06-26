@@ -4,6 +4,7 @@ import numpy as np
 from time import time
 from detection_class import MarkerDetection
 from filter_function import filter_angles
+from math import sqrt
 
 
 class MotionAnalysis:
@@ -180,6 +181,29 @@ class MotionAnalysis:
             prev_y = self.centers[i][0][1]
 
         self.counting += 1
+    
+    def px_to_cm(self, vect_cm):
+        prev_x = 0
+        prev_y = 0
+
+        for i, (_, _) in enumerate(self.sorted_centers):
+
+            if prev_x != 0 and prev_y != 0:
+                x_le = self.centers[2][0][0]
+                y_le = self.centers[2][0][1]
+                x_lm = self.centers[3][0][0]
+                y_lm = self.centers[3][0][1]
+
+                vect_ppx = sqrt((pow(x_lm - x_le, 2)) + pow(y_lm - y_le, 2))
+                # vector with values for pixels
+                print(vect_ppx)
+                # vector with value for pixels per centimeter
+                vect_ppc = vect_ppx / vect_cm 
+                print(vect_ppc)
+
+
+            prev_x = self.centers[i][0][0]  
+            prev_y = self.centers[i][0][1]
 
     def lines(self, showLines=True):
         if showLines:
