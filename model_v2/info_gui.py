@@ -1,9 +1,36 @@
+
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QComboBox, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget,QDialog, QLabel, QLineEdit, QComboBox, QPushButton, QVBoxLayout, QHBoxLayout
 import cv2
+from PyQt5.QtCore import pyqtSignal
+
+class SearchAmputeeWindow(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('Search Amputee')
+        self.setFixedSize(300, 150)
+
+        self.name_input = QLineEdit()
+
+        search_button = QPushButton('Search')
+        search_button.clicked.connect(self.searchAmputee)
+
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel('Enter the name of the amputee:'))
+        layout.addWidget(self.name_input)
+        layout.addWidget(search_button)
+
+        self.setLayout(layout)
+
+    def searchAmputee(self):
+        name = self.name_input.text()
+        # Add your search logic here using the provided name input
+        print('There are no available results', name)
 
 
 class AmputeeDataInput(QWidget):
+    submit_signal = pyqtSignal()  # Custom signal for submit button
+
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -28,8 +55,10 @@ class AmputeeDataInput(QWidget):
         self.activity_level_combo.addItems(['K0', 'K1', 'K2', 'K3', 'K4'])
 
         # Create submit button
-        submit_button = QPushButton('Submit')
-        submit_button.clicked.connect(self.submitData)
+        start_button = QPushButton('Start Gait Analysis')
+        search_button = QPushButton('Search amputee')
+        search_button.clicked.connect(self.searchAmputee)
+        start_button.clicked.connect(self.submitData)
 
         # Create layout
         info_box_layout = QVBoxLayout()
@@ -44,39 +73,31 @@ class AmputeeDataInput(QWidget):
         info_box_layout.addWidget(self.amputated_limb_combo)
         info_box_layout.addWidget(activity_level_label)
         info_box_layout.addWidget(self.activity_level_combo)
-        info_box_layout.addWidget(submit_button)
+        info_box_layout.addWidget(search_button)
+        info_box_layout.addWidget(start_button)
 
         self.setLayout(info_box_layout)
-        self.show()
 
     def submitData(self):
-        name = self.name_input.text()
-        amputation_level = self.amputation_level_combo.currentText()
-        amputated_limb = self.amputated_limb_combo.currentText()
-        activity_level = self.activity_level_combo.currentText()
-
-        print('Name:', name)
-        print('Amputation Level:', amputation_level)
-        print('Amputated Limb:', amputated_limb)
-        print('Activity Level:', activity_level)
-        
+        self.name = self.name_input.text()
+        self.amputation_level = self.amputation_level_combo.currentText()
+        self.amputated_limb = self.amputated_limb_combo.currentText()
+        self.activity_level = self.activity_level_combo.currentText()
+        '''
+        print('Name:', self.name)
+        print('Amputation Level:', self.amputation_level)
+        print('Amputated Limb:', self.amputated_limb)
+        print('Activity Level:', self.activity_level)
+        '''
+        self.submit_signal.emit() 
         self.close()
-        self.startWebcam()
-
-    def startWebcam(self):
-        cap = cv2.VideoCapture(0)  # 0 indicates the default webcam
-        while True:
-            ret, frame = cap.read()
-            cv2.imshow('Webcam', frame)
-            if cv2.waitKey(1) == ord('q'):  # Press 'q' to quit
-                break
-        cap.release()
-        cv2.destroyAllWindows()
-
-        self.close()
-
+    
+    def searchAmputee(self):
+        search_window = SearchAmputeeWindow()
+        search_window.exec_()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = AmputeeDataInput()
+    window.show()
     sys.exit(app.exec_())

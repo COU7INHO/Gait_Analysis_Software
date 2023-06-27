@@ -2,9 +2,8 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QLineEdit, QPushButton, QComboBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter, QPalette
-from PyQt5.QtCore import pyqtSignal
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -85,9 +84,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+#* ################### Input data GUI ###################
 
-        self.video_widget = VideoData()
-        self.init_ui()
+        self.amputee_data = AmputeeDataInput()
+
+        self.amputee_data.submit_signal.connect(self.on_submit) 
+        self.amputee_data.show()
 
         self.x_history = []
         self.y_history = []
@@ -95,8 +97,15 @@ class MainWindow(QMainWindow):
         self.y_history2 = []
         self.x_history3 = []
         self.y_history3 = []
+        
+    def on_submit(self):
+
+        self.video_widget = VideoData()
+        self.init_ui()
+        self.show()
 
     def init_ui(self):
+
         WINDOW_HEIGHT = 800
         WINDOW_WIDTH = 1500
 
@@ -197,9 +206,9 @@ class MainWindow(QMainWindow):
         self.name = QLabel()
         self.amp_level = QLabel()
         self.amp_side = QLabel()
-        #self.name.setText(f"Name: {self.name}")
-        #self.amp_level.setText(f"Amp.level: {self.amputation_level}")
-        #self.amp_side.setText(f"Amp.limb: {self.amputated_limb}")
+        self.name.setText(f"<html><b>Name:</b> {self.amputee_data.name}")
+        self.amp_level.setText(f"<html><b>Amp.level</b>: {self.amputee_data.amputation_level}")
+        self.amp_side.setText(f"<html><b>Amp.limb</b>: {self.amputee_data.amputated_limb}")
 
         person_info_layout.addWidget(self.name)
         person_info_layout.addWidget(self.amp_level)
@@ -413,8 +422,5 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
     window = MainWindow()
-    window.show()
-
     sys.exit(app.exec_())

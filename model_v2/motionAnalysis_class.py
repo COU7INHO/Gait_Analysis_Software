@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 from time import time
 from detection_class import MarkerDetection
-from filter_function import filter_angles
 from math import sqrt
 
 
