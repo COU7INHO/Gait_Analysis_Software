@@ -2,7 +2,7 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton, QSizePolicy
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter, QPalette
 
 import matplotlib.pyplot as plt
@@ -128,6 +128,7 @@ class MainWindow(QMainWindow):
         menu_bar.addMenu(view_menu)
 
         view_labels_action = QAction("View labels", self)
+        view_labels_action.triggered.connect(lambda: self.video_widget.init_video.lines(showLines=False))
         view_menu.addAction(view_labels_action)
 
         view_bboxes_action = QAction("View bounding boxes", self)
@@ -160,7 +161,7 @@ class MainWindow(QMainWindow):
 
         plot_frame = QFrame()
         
-        plot_frame.setFrameShape(QFrame.StyledPanel)
+        plot_frame.setFrameShape(QFrame.NoFrame)
         plot_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
 
         self.figure = Figure()
@@ -199,7 +200,7 @@ class MainWindow(QMainWindow):
 #* ############################### Central frame ###############################
 
         person_info_frame = QFrame()
-        person_info_frame.setFrameShape(QFrame.StyledPanel)
+        person_info_frame.setFrameShape(QFrame.NoFrame)
         person_info_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
         
         person_info_layout = QHBoxLayout()
@@ -218,7 +219,7 @@ class MainWindow(QMainWindow):
 
 
         video_frame = QFrame()
-        video_frame.setFrameShape(QFrame.StyledPanel)
+        video_frame.setFrameShape(QFrame.NoFrame)
         video_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
 
         video_frame_layout = QVBoxLayout()
@@ -279,7 +280,7 @@ class MainWindow(QMainWindow):
 #* ############################### devi_info_frame ###############################
         
         devi_info_frame = QFrame()
-        devi_info_frame.setFrameShape(QFrame.StyledPanel)
+        devi_info_frame.setFrameShape(QFrame.NoFrame)
         devi_info_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
 
         devi_info_layout = QVBoxLayout()
@@ -287,14 +288,22 @@ class MainWindow(QMainWindow):
 
         # Actions frame
         actions_frame = QFrame()
-        actions_frame.setFrameShape(QFrame.StyledPanel)
-        actions_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
 
-        actions_label = QLabel("Actions")
+        actions_frame.setFrameShape(QFrame.NoFrame)
+        actions_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+        actions_frame.setFixedSize(374, 140)
+
+        save_button = QPushButton("Save results")
+        save_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 1px solid black;")
+        new_analysis_button = QPushButton("Start a new analysis")
+        new_analysis_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 1px solid black;")
 
         actions_layout = QVBoxLayout()
-        actions_layout.addWidget(actions_label)
         actions_frame.setLayout(actions_layout)
+        actions_layout.setAlignment(Qt.AlignHCenter)
+        actions_layout.addWidget(save_button)
+        actions_layout.addWidget(new_analysis_button)
+
 
         # Deviations frame
         deviations_frame = QFrame()
