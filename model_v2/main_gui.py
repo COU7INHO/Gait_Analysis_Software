@@ -2,8 +2,8 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton, QSizePolicy
-from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter, QPalette
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton
+from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -41,7 +41,7 @@ class VideoData(QLabel):
         self.init_video.getCenters()  
         self.init_video.calcAngles()
         self.init_video.lines()
-        self.init_video.writeLabels()
+        self.init_video.labels()
         self.init_video.timeStop()
         self.video_frame = self.init_video.frame
         self.video_frame = cv2.cvtColor(self.video_frame, cv2.COLOR_BGR2RGB)
@@ -65,7 +65,15 @@ class VideoData(QLabel):
         for angle in angles:
              final_angle = angle
         return final_angle
+    
+    def toggle_show_lines(self, value):
+        self.init_video.showLines = value
 
+    def toggle_show_labels(self, value):
+        self.init_video.showLabels = value
+
+    def toggle_show_bbox(self, value):
+        self.init_video.showbbox = value
 class GradientFrame(QFrame):
     def __init__(self, start_color, end_color):
         super().__init__()
@@ -127,14 +135,22 @@ class MainWindow(QMainWindow):
         view_menu = QMenu("View", self)
         menu_bar.addMenu(view_menu)
 
-        view_labels_action = QAction("View labels", self)
-        view_labels_action.triggered.connect(lambda: self.video_widget.init_video.lines(showLines=False))
+        view_labels_action = QAction("Hide labels", self)
+        view_labels_action.setCheckable(True)
+        view_labels_action.setChecked(False)
+        view_labels_action.triggered.connect(self.view_labels_action_triggered)
         view_menu.addAction(view_labels_action)
 
-        view_bboxes_action = QAction("View bounding boxes", self)
+        view_bboxes_action = QAction("Hide bounding boxes", self)
+        view_bboxes_action.setCheckable(True)
+        view_bboxes_action.setChecked(False)
+        view_bboxes_action.triggered.connect(self.view_bbox_action_triggered)
         view_menu.addAction(view_bboxes_action)
 
-        view_lines_action = QAction("View lines", self)
+        view_lines_action = QAction("Hide lines", self)
+        view_lines_action.setCheckable(True)
+        view_lines_action.setChecked(False)
+        view_lines_action.triggered.connect(self.view_lines_action_triggered)
         view_menu.addAction(view_lines_action)
 
         help_menu = QMenu("Help", self)
@@ -428,6 +444,14 @@ class MainWindow(QMainWindow):
 
             self.findMaxMin("Ankle")
 
+    def view_lines_action_triggered(self, checked):
+        self.video_widget.toggle_show_lines(not checked)
+
+    def view_labels_action_triggered(self, checked):
+        self.video_widget.toggle_show_labels(not checked)
+
+    def view_bbox_action_triggered(self, checked):
+        self.video_widget.toggle_show_bbox(not checked)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

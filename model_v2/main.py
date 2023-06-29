@@ -18,7 +18,7 @@ while True:
     obj.calcAngles()
     obj.px_to_cm(20)
     obj.lines()
-    obj.writeLabels()
+    obj.labels()
     obj.timeStop()
     obj.displayWindow()
 

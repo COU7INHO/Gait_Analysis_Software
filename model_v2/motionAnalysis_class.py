@@ -21,6 +21,9 @@ class MotionAnalysis:
         self.init_angle_ang = None
         self.filtered_ankle_angles = []
         self.direction = "left_to_right"
+        self.showLines = True
+        self.showLabels= True
+        self.showbbox = True
 
     def openCamera(self):
         self.camera = cv2.VideoCapture(self.cameraID)
@@ -80,7 +83,8 @@ class MotionAnalysis:
             self.x_coord, self.y_coord = center[0], center[1]
             self.sorted_centers.append(((self.x_coord, self.y_coord), i))
             self.centers.append((center, i))
-            cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
+            if self.showbbox:
+                cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
             cv2.circle(self.frame, center, 6, (255, 0, 0), -1)
 
     def getDirection(self):
@@ -204,8 +208,8 @@ class MotionAnalysis:
             prev_x = self.centers[i][0][0]  
             prev_y = self.centers[i][0][1]
 
-    def lines(self, showLines=True):
-        if showLines:
+    def lines(self):
+        if self.showLines:
             points = []
             for i in range(len(self.centers)):
                 if i == 1:
@@ -227,8 +231,8 @@ class MotionAnalysis:
             for i in range(1, len(points)):
                 cv2.line(self.frame, points[i], points[i-1], (0, 255, 0), 3)
 
-    def writeLabels(self, showLabels=True):
-        if showLabels:
+    def labels(self):
+        if self.showLabels:
             for idx, point in enumerate(self.unique_points_list):
                 if idx < len(self.names):
                     name = self.names[idx]
