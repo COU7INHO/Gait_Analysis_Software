@@ -43,7 +43,6 @@ class AmputeeDataInput(QWidget):
         name_label = QLabel('Full Name:')
         amputation_level_label = QLabel('Amputation Level:')
         amputated_limb_label = QLabel('Amputated Limb:')
-        activity_level_label = QLabel('Activity Level:')
 
         # Create input fields
         self.name_input = QLineEdit()
@@ -51,8 +50,6 @@ class AmputeeDataInput(QWidget):
         self.amputation_level_combo.addItems(['Transfemoral', 'Transtibial'])
         self.amputated_limb_combo = QComboBox()
         self.amputated_limb_combo.addItems(['Right', 'Left'])
-        self.activity_level_combo = QComboBox()
-        self.activity_level_combo.addItems(['K0', 'K1', 'K2', 'K3', 'K4'])
 
         # Create submit button
         start_button = QPushButton('Start Gait Analysis')
@@ -71,8 +68,6 @@ class AmputeeDataInput(QWidget):
         info_box_layout.addWidget(self.amputation_level_combo)
         info_box_layout.addWidget(amputated_limb_label)
         info_box_layout.addWidget(self.amputated_limb_combo)
-        info_box_layout.addWidget(activity_level_label)
-        info_box_layout.addWidget(self.activity_level_combo)
         info_box_layout.addWidget(search_button)
         info_box_layout.addWidget(start_button)
 
@@ -82,13 +77,7 @@ class AmputeeDataInput(QWidget):
         self.name = self.name_input.text()
         self.amputation_level = self.amputation_level_combo.currentText()
         self.amputated_limb = self.amputated_limb_combo.currentText()
-        self.activity_level = self.activity_level_combo.currentText()
-        '''
-        print('Name:', self.name)
-        print('Amputation Level:', self.amputation_level)
-        print('Amputated Limb:', self.amputated_limb)
-        print('Activity Level:', self.activity_level)
-        '''
+
         self.submit_signal.emit() 
         self.close()
     

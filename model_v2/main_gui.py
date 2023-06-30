@@ -2,7 +2,7 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton, QDialog, QTextEdit
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter
 
 import matplotlib.pyplot as plt
@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 import cv2
 from motionAnalysis_class import MotionAnalysis
 from info_gui import AmputeeDataInput
+from pdf_report import PdfGen
 
 class VideoData(QLabel):
     def __init__(self):
@@ -92,17 +93,18 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-#* ################### Input data GUI ###################
-
+        # GUI to input amputee data
         self.amputee_data = AmputeeDataInput()
-
         self.amputee_data.submit_signal.connect(self.on_submit) 
         self.amputee_data.show()
 
+        # Hip angle
         self.x_history = []
         self.y_history = []
+        # Knee angle
         self.x_history2 = []
         self.y_history2 = []
+        # Ankle angle
         self.x_history3 = []
         self.y_history3 = []
         
@@ -310,9 +312,11 @@ class MainWindow(QMainWindow):
         actions_frame.setFixedSize(374, 140)
 
         save_button = QPushButton("Save results")
-        save_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 1px solid black;")
+        save_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 2px solid black;")
+        save_button.clicked.connect(self.open_save_dialog)
+
         new_analysis_button = QPushButton("Start a new analysis")
-        new_analysis_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 1px solid black;")
+        new_analysis_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 2px solid black;")
 
         actions_layout = QVBoxLayout()
         actions_frame.setLayout(actions_layout)
@@ -452,6 +456,28 @@ class MainWindow(QMainWindow):
 
     def view_bbox_action_triggered(self, checked):
         self.video_widget.toggle_show_bbox(not checked)
+
+
+    def open_save_dialog(self):
+
+        results_pdf = PdfGen()
+        dialog = QDialog()
+        dialog.setWindowTitle("Comments")
+
+        dialog.setFixedSize(500, 400)
+
+        layout = QVBoxLayout()
+
+        text_edit = QTextEdit()
+        layout.addWidget(text_edit)
+
+        save_pdf_button = QPushButton("Save PDF")
+        save_pdf_button.clicked.connect(lambda: results_pdf.save_as_pdf(text_edit.toPlainText(), dialog))
+        layout.addWidget(save_pdf_button)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
