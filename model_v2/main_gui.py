@@ -460,7 +460,7 @@ class MainWindow(QMainWindow):
 
     def open_save_dialog(self):
 
-        results_pdf = PdfGen()
+        results_pdf = PdfGen(self.amputee_data.name, self.amputee_data.amputation_level, self.amputee_data.amputated_limb)
         dialog = QDialog()
         dialog.setWindowTitle("Comments")
 

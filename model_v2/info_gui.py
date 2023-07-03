@@ -1,7 +1,6 @@
 
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget,QDialog, QLabel, QLineEdit, QComboBox, QPushButton, QVBoxLayout, QHBoxLayout
-import cv2
 from PyQt5.QtCore import pyqtSignal
 
 class SearchAmputeeWindow(QDialog):
