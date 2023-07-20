@@ -192,7 +192,6 @@ class MainWindow(QMainWindow):
         plot_frame.setLayout(plot_layout)
 
         self.ax = self.figure.add_subplot(311)
-        self.ax.set_ylabel("Angle (degrees)")
         self.ax.set_title("Hip angle")
         self.line, = self.ax.plot([], [])
         self.ax.set_xticklabels([]) 
@@ -205,15 +204,15 @@ class MainWindow(QMainWindow):
 
         self.ax3 = self.figure.add_subplot(313)
         self.ax3.set_xlabel("Frame")
-        self.ax3.set_ylabel("Angle (degrees)")
         self.ax3.set_title("Ankle angle")
         self.line3, = self.ax3.plot([], [])
-        
+
         facecolor = (rgb_plot_frame[0] / 255, rgb_plot_frame[1] / 255, rgb_plot_frame[2] / 255)
         self.figure.set_facecolor(facecolor)
         plot_frame.setFixedSize(400, WINDOW_HEIGHT)
 
         main_layout.addWidget(plot_frame)
+
 
 #* ############################### Central frame ###############################
 
@@ -324,7 +323,6 @@ class MainWindow(QMainWindow):
         actions_layout.addWidget(save_button)
         actions_layout.addWidget(new_analysis_button)
 
-
         # Deviations frame
         deviations_frame = QFrame()
         deviations_frame.setFrameShape(QFrame.StyledPanel)
@@ -431,6 +429,7 @@ class MainWindow(QMainWindow):
 
             self.findMaxMin("Knee")
 
+
         elif angle == "Ankle":
             x = self.video_widget.current_frame
             y = self.video_widget.getAngle("Ankle")
@@ -456,7 +455,6 @@ class MainWindow(QMainWindow):
 
     def view_bbox_action_triggered(self, checked):
         self.video_widget.toggle_show_bbox(not checked)
-
 
     def open_save_dialog(self):
 

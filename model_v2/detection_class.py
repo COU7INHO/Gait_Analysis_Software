@@ -30,7 +30,7 @@ class MarkerDetection:
                 class_id = np.argmax(scores)
                 self.confidenceValue = scores[class_id]
 
-                if self.confidenceValue > 0.6:
+                if self.confidenceValue > 0.5:
                     x, y, w, h = detection[0:4] * np.array([width, height, width, height])
                     x1 = int(x - w/2)
                     y1 = int(y - h/2)
