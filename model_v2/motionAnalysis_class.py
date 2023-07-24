@@ -227,7 +227,8 @@ class MotionAnalysis:
         #cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
         if self.frame.shape[0] > 0 and self.frame.shape[1] > 0:
             cv2.imshow('Gait analysis', self.frame)
-        cv2.waitKey(int(1000/120))
+        #cv2.waitKey(int(1000/120))
+        cv2.waitKey(0)
 
     def closeWindow(self):
         self.camera.release()
