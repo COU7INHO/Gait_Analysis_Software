@@ -8,6 +8,7 @@ class MarkerDetection:
         self.detectFrame = detectFrame
         self.confidenceValue = confidenceValue
         self.net = cv2.dnn.readNet(weightsFile,cfgFile)
+        self.blob = None
 
     def detect(self):
         layer_names = self.net.getLayerNames()
@@ -16,9 +17,9 @@ class MarkerDetection:
         if self.detectFrame is not None:
             height, width, channels = self.detectFrame.shape
 
-            blob = cv2.dnn.blobFromImage(self.detectFrame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+            self.blob = cv2.dnn.blobFromImage(self.detectFrame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
 
-        self.net.setInput(blob)
+        self.net.setInput(self.blob)
         outs = self.net.forward(output_layers)
 
         class_ids = []

@@ -2,7 +2,7 @@ import cv2
 from motionAnalysis_class import MotionAnalysis
 
 
-obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/ciclo.mov", "Motion Analysis")
+obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/mix_dir.mp4", "video")
 
 obj.openCamera()
 obj.timeInit()
@@ -25,4 +25,4 @@ while True:
         break
 
 obj.closeWindow()
-cv2.destroyAllWindows()
+

@@ -22,8 +22,8 @@ class PixelToCentimeter:
         cv2.namedWindow("Video with Line")
         cv2.setMouseCallback("Video with Line", self.handle_mouse_event)
 
-        self.pixel_to_cm_conversion_horizontal = None
-        self.pixel_to_cm_conversion_vertical = None
+        self.pixel_to_cm_horizontal = None
+        self.pixel_to_cm_vertical = None
 
     def draw_line_on_frame(self, frame, start_point, end_point, line_length, display=True):
         if display:
@@ -65,11 +65,11 @@ class PixelToCentimeter:
                                               (self.end_point_horizontal[1] - self.start_point_horizontal[1]) ** 2)
                 # Calculate the conversion factor from pixels to centimeters horizontally
                 real_length_horizontal = 10
-                self.pixel_to_cm_conversion_horizontal = real_length_horizontal / length_horizontal
+                self.pixel_to_cm_horizontal = real_length_horizontal / length_horizontal
 
                 self.draw_line_on_frame(frame_with_line, self.start_point_horizontal, self.end_point_horizontal,
                                         real_length_horizontal, display=True)
-                print(f"\n Width cm = {frame_width * self.pixel_to_cm_conversion_horizontal}")
+                print(f"\n Width cm = {frame_width * self.pixel_to_cm_horizontal}")
 
             # Calibrate vertically
             if self.start_point_vertical is not None and self.end_point_vertical is not None and self.draw_vertical_line:
@@ -78,11 +78,11 @@ class PixelToCentimeter:
 
                 # Calculate the conversion factor from pixels to centimeters vertically
                 real_length_vertical = 5
-                self.pixel_to_cm_conversion_vertical = real_length_vertical / length_vertical
+                self.pixel_to_cm_vertical = real_length_vertical / length_vertical
 
                 self.draw_line_on_frame(frame_with_line, self.start_point_vertical, self.end_point_vertical,
                                         real_length_vertical, display=True)
-                print(f"\n Height cm = {frame_height * self.pixel_to_cm_conversion_vertical}")
+                print(f"\n Height cm = {frame_height * self.pixel_to_cm_vertical}")
 
             cv2.imshow("Video with Line", frame_with_line)
 
@@ -98,10 +98,10 @@ class PixelToCentimeter:
         cv2.destroyAllWindows()
 
     def get_pixel_to_cm_conversion_horizontal(self):
-        return self.pixel_to_cm_conversion_horizontal
+        return self.pixel_to_cm_horizontal
 
     def get_pixel_to_cm_conversion_vertical(self):
-        return self.pixel_to_cm_conversion_vertical
+        return self.pixel_to_cm_vertical
 
 
 # Usage
