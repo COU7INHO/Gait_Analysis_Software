@@ -17,8 +17,8 @@ from pdf_report import PdfGen
 class VideoData(QLabel):
     def __init__(self):
         super(VideoData, self).__init__()
-
-        self.init_video = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/espelho.mov", "Motion Analysis")
+        self.window_name = "Gait Analysis"
+        self.init_video = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/espelho.mov", self.window_name)
 
         self.init_video.openCamera()
         self.init_video.timeInit()
@@ -44,7 +44,10 @@ class VideoData(QLabel):
         self.init_video.lines()
         self.init_video.labels()
         self.init_video.timeStop()
-        self.video_frame = self.init_video.frame
+        self.video_frame = self.init_video.new_frame
+
+        self.init_video.displayWindow()  #* Display Window <-- <-- <-- <-- <-- 
+
         self.video_frame = cv2.cvtColor(self.video_frame, cv2.COLOR_BGR2RGB)
         self.video_frame = cv2.resize(self.video_frame, (self.maximumWidth(), self.maximumHeight()))
         height, width, channels = self.video_frame.shape
@@ -75,6 +78,7 @@ class VideoData(QLabel):
 
     def toggle_show_bbox(self, value):
         self.init_video.showbbox = value
+        
 class GradientFrame(QFrame):
     def __init__(self, start_color, end_color):
         super().__init__()
@@ -121,7 +125,7 @@ class MainWindow(QMainWindow):
 
         rgb_plot_frame = [156, 255, 80]
 
-        self.setWindowTitle("Gait analysis")
+        self.setWindowTitle(self.video_widget.window_name)
         self.setGeometry(30, 40, WINDOW_WIDTH, WINDOW_HEIGHT)
         menu_bar = self.menuBar()
 
@@ -233,7 +237,6 @@ class MainWindow(QMainWindow):
         person_info_layout.addWidget(self.amp_side)
 
         person_info_frame.setLayout(person_info_layout)
-
 
         video_frame = QFrame()
         video_frame.setFrameShape(QFrame.NoFrame)
