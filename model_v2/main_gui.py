@@ -5,7 +5,6 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton, QDialog, QTextEdit
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter
 
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -40,6 +39,7 @@ class VideoData(QLabel):
         self.init_video.removeEmptyBoxes()
         self.init_video.checkMarkers()
         self.init_video.getCenters()  
+        self.init_video.gait_direction()
         self.init_video.calcAngles()
         self.init_video.lines()
         self.init_video.labels()

@@ -14,7 +14,7 @@ while True:
     obj.removeEmptyBoxes()
     obj.checkMarkers()
     obj.getCenters()  
-    obj.getDirection()
+    obj.gait_direction()
     obj.calcAngles()
     obj.lines()
     obj.labels()

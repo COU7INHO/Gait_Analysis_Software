@@ -93,7 +93,7 @@ class MotionAnalysis:
             length_horizontal = math.sqrt((self.end_point_horizontal[0] - self.start_point_horizontal[0]) ** 2 +
                                             (self.end_point_horizontal[1] - self.start_point_horizontal[1]) ** 2)
             # Calculate the conversion factor from pixels to centimeters horizontally
-            real_length_horizontal = 10
+            real_length_horizontal = 10.32
             self.pixel_to_cm_horizontal = real_length_horizontal / length_horizontal
 
             self.draw_line_on_frame(self.new_frame, self.start_point_horizontal, self.end_point_horizontal,
@@ -106,7 +106,7 @@ class MotionAnalysis:
                                         (self.end_point_vertical[1] - self.start_point_vertical[1]) ** 2)
 
             # Calculate the conversion factor from pixels to centimeters vertically
-            real_length_vertical = 5
+            real_length_vertical = 4.21
             self.pixel_to_cm_vertical = real_length_vertical / length_vertical
 
             self.draw_line_on_frame(self.new_frame, self.start_point_vertical, self.end_point_vertical,
@@ -166,22 +166,33 @@ class MotionAnalysis:
             if self.showbbox:
                 cv2.rectangle(self.new_frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
             cv2.circle(self.new_frame, center, 6, (255, 0, 0), -1)
+    
+    def gait_direction(self):
+        if not hasattr(self, 'prev_frame'):
+            self.prev_frame = self.new_frame.copy()
+            return
 
-    def getDirection(self):
+        # Reduce frame size for better performance
+        scale_factor = 0.15
+        resized_prev_frame = cv2.resize(self.prev_frame, None, fx=scale_factor, fy=scale_factor)
+        resized_new_frame = cv2.resize(self.new_frame, None, fx=scale_factor, fy=scale_factor)
 
-        x_coords = [center[0] for center, _ in self.sorted_centers]
-        mean_x_coord = np.mean(x_coords)
-        self.direction= ""
-        if hasattr(self, 'prev_mean_x_coord'):
-            if mean_x_coord > self.prev_mean_x_coord:
-                self.direction = "left_to_right"
-                print(self.direction)
-            else:
-                self.direction = "right_to_left"
-                print(self.direction)
+        prev_gray = cv2.cvtColor(resized_prev_frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(resized_new_frame, cv2.COLOR_BGR2GRAY)
+
+        # Calculate optical flow using Farneback method
+        flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, pyr_scale=0.5, levels=3, winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
+
+        # Calculate the mean flow in the x-direction
+        mean_flow_x = np.mean(flow[:, :, 0])
+
+        # Set the direction based on the mean flow in the x-direction
+        self.direction = "left_to_right" if mean_flow_x > 0 else "right_to_left"
         print(self.direction)
 
-        self.prev_mean_x_coord = mean_x_coord
+        # Update the previous frame
+        self.prev_frame = self.new_frame.copy()
+
 
     def calcAngles(self):
         self.gt_center = []
@@ -306,7 +317,6 @@ class MotionAnalysis:
             cv2.imshow(self.window_name, self.new_frame)
         #cv2.waitKey(int(1000/120))
         key = cv2.waitKey(1)
-
 
     def closeWindow(self):
         self.camera.release()
