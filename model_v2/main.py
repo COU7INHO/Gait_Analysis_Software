@@ -2,7 +2,7 @@ import cv2
 from motionAnalysis_class import MotionAnalysis
 
 
-obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/mix_dir.mp4", "video")
+obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/ciclo.mov", "video")
 
 obj.openCamera()
 obj.timeInit()
@@ -15,7 +15,7 @@ while True:
     obj.checkMarkers()
     obj.getCenters()  
     obj.gait_direction()
-    obj.calcAngles()
+    obj.joint_angle()
     obj.lines()
     obj.labels()
     obj.timeStop()

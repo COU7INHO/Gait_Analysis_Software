@@ -2,8 +2,10 @@
 import cv2
 import numpy as np
 from time import time
-from detection_class import MarkerDetection
 import math
+from detection_class import MarkerDetection
+import matplotlib.pyplot as plt
+
 
 class MotionAnalysis:
     def __init__(self, cameraID, window_name, n_markers=5):
@@ -18,6 +20,8 @@ class MotionAnalysis:
         self.knee_angles = []
         self.ankle_angles = []
         self.counting = 0
+        self.counting_LTR = 0
+
         self.init_angle_ang = None
         self.filtered_ankle_angles = []
         self.direction = "left_to_right"
@@ -42,6 +46,21 @@ class MotionAnalysis:
 
         self.pixel_to_cm_horizontal = None
         self.pixel_to_cm_vertical = None
+
+        self.min_y_vm_list = []
+        self.vm_y_value = []
+        self.init_stance_phase = False
+        self.init_swing_phase = False
+        self.stance_frame = None
+        self.swing_frame = None
+
+        self.vm_y_value_LTR = []
+        self.init_stance_phase_LTR = False
+        self.init_swing_phase_LTR = False
+        self.stance_frame_LTR = None
+        self.swing_frame_LTR = None
+
+        self.fps_rate = 120
 
 #*######################################
 
@@ -98,7 +117,6 @@ class MotionAnalysis:
 
             self.draw_line_on_frame(self.new_frame, self.start_point_horizontal, self.end_point_horizontal,
                                     real_length_horizontal, display=True)
-            print(f"\n Width cm = {width * self.pixel_to_cm_horizontal}")
 
         # Calibrate vertically
         if self.start_point_vertical is not None and self.end_point_vertical is not None and self.draw_vertical_line:
@@ -111,7 +129,6 @@ class MotionAnalysis:
 
             self.draw_line_on_frame(self.new_frame, self.start_point_vertical, self.end_point_vertical,
                                     real_length_vertical, display=True)
-            print(f"\n Height cm = {height * self.pixel_to_cm_vertical}")
 #*######################################
 
     def trackerInit(self):
@@ -168,6 +185,7 @@ class MotionAnalysis:
             cv2.circle(self.new_frame, center, 6, (255, 0, 0), -1)
     
     def gait_direction(self):
+
         if not hasattr(self, 'prev_frame'):
             self.prev_frame = self.new_frame.copy()
             return
@@ -188,18 +206,42 @@ class MotionAnalysis:
 
         # Set the direction based on the mean flow in the x-direction
         self.direction = "left_to_right" if mean_flow_x > 0 else "right_to_left"
-        print(self.direction)
 
         # Update the previous frame
         self.prev_frame = self.new_frame.copy()
 
+    def get_angle(self, joint1, joint2, joint3):
+        # Calculate vectors between the points
+        vec1 = (joint2[0] - joint1[0], joint2[1] - joint1[1])
+        vec2 = (joint3[0] - joint2[0], joint3[1] - joint2[1])
 
-    def calcAngles(self):
+        # Calculate the dot product of the two vectors
+        dot_product = vec1[0] * vec2[0] + vec1[1] * vec2[1]
+
+        # Calculate the magnitude of the vectors
+        magnitude_vec1 = math.sqrt(vec1[0] ** 2 + vec1[1] ** 2)
+        magnitude_vec2 = math.sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+
+        if magnitude_vec1 == 0 or magnitude_vec2 == 0:
+            return 0.00
+
+        # Calculate the angle in radians
+        angle_radians = math.acos(dot_product / (magnitude_vec1 * magnitude_vec2))
+
+        # Convert angle from radians to degrees
+        angle_degrees = math.degrees(angle_radians)
+
+        return angle_degrees
+
+    def joint_angle(self):
+
         self.gt_center = []
         self.sorted_centers = sorted(self.sorted_centers, key=lambda x: x[0][1])
 
         prev_x = 0
         prev_y = 0
+        self.time_values = []  # Corresponding time values for each center
+
 
         for i, (_, _) in enumerate(self.sorted_centers):
 
@@ -210,60 +252,59 @@ class MotionAnalysis:
                 x_le = self.centers[2][0][0]
                 y_le = self.centers[2][0][1]
                 alpha = np.arctan((x_gt - x_le)/(y_gt - y_le))
-                new_x = int(-distance * np.sin(alpha) + x_gt)
-                new_y = int(-distance * np.cos(alpha) + y_gt)
-                self.gt_center.append((new_x, new_y))
+                new_x = int(-distance * np.sin(alpha) + x_gt)  #! Atualizar a distancia
+                new_y = int(-distance * np.cos(alpha) + y_gt)  #! Atualizar a distancia
+                if not self.gt_center:
+                    self.gt_center.append((new_x, new_y))
 
-                #* trunk_angle
-                trunk_angle = np.degrees(np.arctan((new_x - self.centers[0][0][0])/(new_y - self.centers[0][0][1])))
-                
-                #* thigh_angle
-                if self.centers[2][0][0] - self.centers[1][0][0] == 0:
-                    thigh_angle = 0
-                else:
-                    thigh_angle = np.degrees(np.arctan((self.centers[2][0][1] - self.centers[1][0][1])/(self.centers[2][0][0] - self.centers[1][0][0])))
+                #* Markers coordinates
+                a_marker = (self.centers[0][0][0], self.centers[0][0][1])
+                gt_marker = (new_x, new_y)
+                le_marker = (self.centers[2][0][0], self.centers[2][0][1])
+                lm_marker = (self.centers[3][0][0], self.centers[3][0][1])
+                v_m_marker = (self.centers[4][0][0], self.centers[4][0][1])
 
-                #* shank_angle
-                if self.centers[3][0][0] - self.centers[2][0][0] == 0:
-                    shank_angle = 0
-                else:
-                    shank_angle = np.degrees(np.arctan((self.centers[3][0][1] - self.centers[2][0][1])/(self.centers[3][0][0] - self.centers[2][0][0])))
-                
-                #* foot_angle
-                foot_angle = np.degrees(np.arctan((self.centers[4][0][1] - self.centers[3][0][1])/(self.centers[4][0][0] - self.centers[3][0][0])))
+                hip_ang = self.get_angle(a_marker, gt_marker, le_marker)
+                knee_ang = self.get_angle(gt_marker, le_marker, lm_marker)
+                ankle_ang = self.get_angle(le_marker, lm_marker, v_m_marker)
 
-                #* hip_ang
-                hip_ang = trunk_angle - thigh_angle 
-                
-                if hip_ang > 0:
-                    hip_ang -= 90
-                elif hip_ang <= 0:
-                    hip_ang += 90
-                if abs(hip_ang) <= 40:
-                    self.hip_angles.append(hip_ang)
-                    
-                #* knee_ang
-                knee_ang = thigh_angle - shank_angle
-  
-                if knee_ang > 100:
-                    knee_ang = 180 - knee_ang
-                elif knee_ang < 0:
-                    knee_ang = abs(knee_ang)
-                else:
-                    continue
-
-                self.knee_angles.append(knee_ang)
-                
-                #* ankle_ang
-                ankle_ang = foot_angle - shank_angle 
-                if self.init_angle_ang is None:
+                if self.init_angle_ang == None:
                     self.init_angle_ang = ankle_ang
-                if ankle_ang < 0:
-                    ankle_ang -= self.init_angle_ang
-                elif ankle_ang > 0:
-                    ankle_ang = 180 - ankle_ang + self.init_angle_ang
-
+                
+                ankle_ang -= self.init_angle_ang
+                self.hip_angles.append(hip_ang)
+                self.knee_angles.append(knee_ang)
                 self.ankle_angles.append(ankle_ang)
+
+                upper_threshold_hip = 40
+                lower_threshold_hip = -20
+
+                upper_threshold_knee = 80
+                lower_threshold_knee = -10
+
+                upper_threshold_ankle = 35
+                lower_threshold_ankle = -30
+
+                # For hip_angles
+                filtered_hip_angles = []
+                for angle in self.hip_angles:
+                    if lower_threshold_hip <= angle <= upper_threshold_hip:
+                        filtered_hip_angles.append(angle)
+                self.hip_angles = filtered_hip_angles
+
+                # For knee_angles
+                filtered_knee_angles = []
+                for angle in self.knee_angles:
+                    if lower_threshold_knee <= angle <= upper_threshold_knee:
+                        filtered_knee_angles.append(angle)
+                self.knee_angles = filtered_knee_angles
+
+                # For ankle_angles
+                filtered_ankle_angles = []
+                for angle in self.ankle_angles:
+                    if lower_threshold_ankle <= angle <= upper_threshold_ankle:
+                        filtered_ankle_angles.append(angle)
+                self.ankle_angles = filtered_ankle_angles
 
                 cv2.circle(self.new_frame, (new_x, new_y), 10, (0, 0, 255), -1)
 
@@ -271,6 +312,66 @@ class MotionAnalysis:
             prev_y = self.centers[i][0][1]
 
         self.counting += 1
+
+    def gait_phases(self):
+        
+        for value in self.sorted_centers:
+            marker = value[1]
+            if marker == 4:  # Consider the VM marker
+                current_frame = int(self.camera.get(cv2.CAP_PROP_POS_FRAMES))
+                current_vm_y = value[0][1]
+
+                self.vm_y_value.append(current_vm_y)
+
+                min_y = min(self.vm_y_value)
+                max_y = max(self.vm_y_value)
+
+                if not self.init_stance_phase and current_vm_y - min_y == 0:
+                    self.init_stance_phase = True
+                    if self.stance_frame == None:
+                        self.stance_frame = current_frame / self.fps_rate
+
+                if not self.init_swing_phase and max_y - current_vm_y >= 7:
+                    self.init_swing_phase = True
+                    if self.swing_frame == None:
+                        self.swing_frame = current_frame / self.fps_rate
+                        
+                #* Colocar uma nova variável para acabar a swing phase
+                #* quando esta acabar então começa a stance phase outra vez
+
+                self.counting += 1
+        
+        return self.stance_frame, self.swing_frame
+    
+    def gait_phase_LTR(self):
+        
+        for value in self.sorted_centers:
+            marker = value[1]
+            if marker == 4:  # Consider the VM marker
+                current_frame = int(self.camera.get(cv2.CAP_PROP_POS_FRAMES))
+                current_vm_y = value[0][1]
+
+                self.vm_y_value_LTR.append(current_vm_y)
+
+                min_y = min(self.vm_y_value_LTR)
+                max_y = max(self.vm_y_value_LTR)
+
+                if not self.init_stance_phase_LTR and current_vm_y - min_y == 0:
+                    self.init_stance_phase_LTR = True
+                    if self.stance_frame_LTR == None:
+                        self.stance_frame_LTR = current_frame / self.fps_rate
+
+                if not self.init_swing_phase_LTR and max_y - current_vm_y >= 7:
+                    self.init_swing_phase_LTR = True
+                    if self.swing_frame_LTR == None:
+                        self.swing_frame_LTR = current_frame / self.fps_rate
+                        
+                #* Colocar uma nova variável para acabar a swing phase
+                #* quando esta acabar então começa a stance phase outra vez
+
+                self.counting_LTR += 1
+        
+        return self.stance_frame_LTR, self.swing_frame_LTR
 
     def lines(self):
         if self.showLines:
