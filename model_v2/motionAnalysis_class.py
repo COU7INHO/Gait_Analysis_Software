@@ -4,7 +4,6 @@ import numpy as np
 from time import time
 import math
 from detection_class import MarkerDetection
-import matplotlib.pyplot as plt
 
 
 class MotionAnalysis:
@@ -89,24 +88,24 @@ class MotionAnalysis:
 #*######################################
 
 
-    def openCamera(self):
+    def open_camera(self):
         self.camera = cv2.VideoCapture(self.cameraID)
         if not self.camera.isOpened():
             print("Error: Could not open video.")
             exit()
 
-    def timeInit(self):
+    def init_time(self):
         self.loop_time = time()
 
-    def getFrame(self):
+    def get_video_frame(self):
         self.success, self.frame = self.camera.read()
-        height, width, _ = self.frame.shape
-        self.new_frame = self.frame.copy()
-        '''
-        print(self.start_point_horizontal)
-        print(self.end_point_horizontal)
-        print(self.draw_horizontal_line)
-        '''
+
+        if self.success:
+            self.new_frame = self.frame.copy()
+        else:
+            self.new_frame = None
+            print("Frame not available")
+
         # Calibrate horizontally
         if self.start_point_horizontal is not None and self.end_point_horizontal is not None and self.draw_horizontal_line:
             length_horizontal = math.sqrt((self.end_point_horizontal[0] - self.start_point_horizontal[0]) ** 2 +
@@ -131,7 +130,7 @@ class MotionAnalysis:
                                     real_length_vertical, display=True)
 #*######################################
 
-    def trackerInit(self):
+    def init_tracker(self):
         markerDDetection = MarkerDetection(self.new_frame)
         self.new_frame, self.boxes, self.indexes = markerDDetection.detect()
 
@@ -140,10 +139,10 @@ class MotionAnalysis:
         for box in self.boxes:
             self.multiTracker.add(cv2.legacy.TrackerCSRT_create(), self.new_frame, box)
 
-    def removeEmptyBoxes(self):
+    def remove_empty_boxes(self):
         self.boxes = [box for box in self.boxes if np.any(box != [0, 0, 0, 0])]
 
-    def checkMarkers(self):
+    def check_markers(self):
         if len(self.boxes) != self.n_markers :
             if self.n_markers - len(self.boxes) == 1:
                 cv2.putText(self.new_frame, "1 marker missing", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
@@ -166,7 +165,7 @@ class MotionAnalysis:
         
             self.tracking, self.boxes = self.multiTracker.update(self.new_frame)
     
-    def getCenters(self):
+    def markers_centers(self):
         self.sorted_centers = []
         self.centers = []
 
@@ -192,25 +191,27 @@ class MotionAnalysis:
 
         # Reduce frame size for better performance
         scale_factor = 0.15
-        resized_prev_frame = cv2.resize(self.prev_frame, None, fx=scale_factor, fy=scale_factor)
-        resized_new_frame = cv2.resize(self.new_frame, None, fx=scale_factor, fy=scale_factor)
 
-        prev_gray = cv2.cvtColor(resized_prev_frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.cvtColor(resized_new_frame, cv2.COLOR_BGR2GRAY)
+        if self.success:
+            resized_prev_frame = cv2.resize(self.prev_frame, None, fx=scale_factor, fy=scale_factor)
+            resized_new_frame = cv2.resize(self.new_frame, None, fx=scale_factor, fy=scale_factor)
 
-        # Calculate optical flow using Farneback method
-        flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, pyr_scale=0.5, levels=3, winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
+            prev_gray = cv2.cvtColor(resized_prev_frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(resized_new_frame, cv2.COLOR_BGR2GRAY)
 
-        # Calculate the mean flow in the x-direction
-        mean_flow_x = np.mean(flow[:, :, 0])
+            # Calculate optical flow using Farneback method
+            flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, pyr_scale=0.5, levels=3, winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
 
-        # Set the direction based on the mean flow in the x-direction
-        self.direction = "left_to_right" if mean_flow_x > 0 else "right_to_left"
+            # Calculate the mean flow in the x-direction
+            mean_flow_x = np.mean(flow[:, :, 0])
 
-        # Update the previous frame
-        self.prev_frame = self.new_frame.copy()
+            # Set the direction based on the mean flow in the x-direction
+            self.direction = "left_to_right" if mean_flow_x > 0 else "right_to_left"
 
-    def get_angle(self, joint1, joint2, joint3):
+            # Update the previous frame
+            self.prev_frame = self.new_frame.copy()
+
+    def get_raw_angles(self, joint1, joint2, joint3):
         # Calculate vectors between the points
         vec1 = (joint2[0] - joint1[0], joint2[1] - joint1[1])
         vec2 = (joint3[0] - joint2[0], joint3[1] - joint2[1])
@@ -233,7 +234,7 @@ class MotionAnalysis:
 
         return angle_degrees
 
-    def joint_angle(self):
+    def get_filtered_angles(self):
 
         self.gt_center = []
         self.sorted_centers = sorted(self.sorted_centers, key=lambda x: x[0][1])
@@ -241,7 +242,6 @@ class MotionAnalysis:
         prev_x = 0
         prev_y = 0
         self.time_values = []  # Corresponding time values for each center
-
 
         for i, (_, _) in enumerate(self.sorted_centers):
 
@@ -264,9 +264,9 @@ class MotionAnalysis:
                 lm_marker = (self.centers[3][0][0], self.centers[3][0][1])
                 v_m_marker = (self.centers[4][0][0], self.centers[4][0][1])
 
-                hip_ang = self.get_angle(a_marker, gt_marker, le_marker)
-                knee_ang = self.get_angle(gt_marker, le_marker, lm_marker)
-                ankle_ang = self.get_angle(le_marker, lm_marker, v_m_marker)
+                hip_ang = self.get_raw_angles(a_marker, gt_marker, le_marker)
+                knee_ang = self.get_raw_angles(gt_marker, le_marker, lm_marker)
+                ankle_ang = self.get_raw_angles(le_marker, lm_marker, v_m_marker)
 
                 if self.init_angle_ang == None:
                     self.init_angle_ang = ankle_ang
@@ -313,7 +313,7 @@ class MotionAnalysis:
 
         self.counting += 1
 
-    def gait_phases(self):
+    def gait_phases_RTL(self):
         
         for value in self.sorted_centers:
             marker = value[1]
@@ -406,19 +406,20 @@ class MotionAnalysis:
                 y = point[1]
                 cv2.putText(self.new_frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 255, 255), 2)
 
-    def timeStop(self):
+    def end_time(self):
         self.fps = 1/(time() - self.loop_time)
         self.loop_time = time()
         cv2.putText(self.new_frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
 
-    def displayWindow(self):
-        #cv2.putText(self.frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
-        #cv2.putText(self.frame, f"Markers: {str(len(self.boxes))}", (10, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
-        if self.new_frame.shape[0] > 0 and self.new_frame.shape[1] > 0:
-            cv2.imshow(self.window_name, self.new_frame)
-        #cv2.waitKey(int(1000/120))
-        key = cv2.waitKey(1)
+    def display_window(self):
+        if self.success:
+            if self.new_frame.shape[0] > 0 and self.new_frame.shape[1] > 0:
+                cv2.imshow(self.window_name, self.new_frame)
+                cv2.waitKey(1)
+        else:
+            cv2.waitKey(0)
+            print("Zero frames available")
 
-    def closeWindow(self):
+    def close_window(self):
         self.camera.release()
         cv2.destroyAllWindows()

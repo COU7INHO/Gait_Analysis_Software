@@ -12,7 +12,7 @@ class SearchAmputeeWindow(QDialog):
         self.name_input = QLineEdit()
 
         search_button = QPushButton('Search')
-        search_button.clicked.connect(self.searchAmputee)
+        search_button.clicked.connect(self.search_amputee)
 
         layout = QVBoxLayout()
         layout.addWidget(QLabel('Enter the name of the amputee:'))
@@ -21,7 +21,7 @@ class SearchAmputeeWindow(QDialog):
 
         self.setLayout(layout)
 
-    def searchAmputee(self):
+    def search_amputee(self):
         name = self.name_input.text()
         # Add your search logic here using the provided name input
         print('There are no available results', name)
@@ -35,9 +35,9 @@ class AmputeeDataInput(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.setWindowTitle('Amputee Information')
         self.setFixedSize(300, 500)
 
@@ -59,15 +59,21 @@ class AmputeeDataInput(QWidget):
         self.weight_input = QDoubleSpinBox()
         self.weight_input.setDecimals(2)
         self.weight_input.setSingleStep(0.01)
+        self.weight_input.setMinimum(0)  
+        self.weight_input.setMaximum(9999)
+
         self.height_input = QDoubleSpinBox()
         self.height_input.setDecimals(2)
         self.height_input.setSingleStep(0.01)
+        self.height_input.setMinimum(0)  
+        self.height_input.setMaximum(9999) 
+
 
         # Create submit button
         start_button = QPushButton('Start Gait Analysis')
         search_button = QPushButton('Search amputee')
-        search_button.clicked.connect(self.searchAmputee)
-        start_button.clicked.connect(self.submitData)
+        search_button.clicked.connect(self.search_amputee)
+        start_button.clicked.connect(self.submit_data)
 
         # Create layout
         info_box_layout = QVBoxLayout()
@@ -89,7 +95,7 @@ class AmputeeDataInput(QWidget):
 
         self.setLayout(info_box_layout)
 
-    def submitData(self):
+    def submit_data(self):
         self.name = self.name_input.text()
         self.amputation_level = self.amputation_level_combo.currentText()
         self.amputated_limb = self.amputated_limb_combo.currentText()
@@ -99,7 +105,7 @@ class AmputeeDataInput(QWidget):
         self.submit_signal.emit() 
         self.close()
     
-    def searchAmputee(self):
+    def search_amputee(self):
         search_window = SearchAmputeeWindow()
         search_window.exec_()
 

@@ -4,25 +4,25 @@ from motionAnalysis_class import MotionAnalysis
 
 obj = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/ciclo.mov", "video")
 
-obj.openCamera()
-obj.timeInit()
-obj.getFrame()
-obj.trackerInit()      
+obj.open_camera()
+obj.init_time()
+obj.get_video_frame()
+obj.init_tracker()      
 
 while True:
-    obj.getFrame()
-    obj.removeEmptyBoxes()
-    obj.checkMarkers()
-    obj.getCenters()  
+    obj.get_video_frame()
+    obj.remove_empty_boxes()
+    obj.check_markers()
+    obj.markers_centers()  
     obj.gait_direction()
-    obj.joint_angle()
+    obj.get_filtered_angles()
     obj.lines()
     obj.labels()
-    obj.timeStop()
-    obj.displayWindow()
+    obj.end_time()
+    obj.display_window()
 
     if cv2.waitKey(1) == ord('q'):
         break
 
-obj.closeWindow()
+obj.close_window()
 

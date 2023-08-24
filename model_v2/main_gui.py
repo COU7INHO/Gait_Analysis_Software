@@ -14,49 +14,51 @@ from pdf_report import PdfGen
 
 import copy
 
+
 class VideoData(QLabel):
     def __init__(self):
         super(VideoData, self).__init__()
         self.window_name = "Gait Analysis"
         self.init_video = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/2_ciclos.mp4", self.window_name)
 
-        self.init_video.openCamera()
-        self.init_video.timeInit()
-        self.init_video.getFrame()
-        self.init_video.trackerInit() 
+        self.init_video.open_camera()
+        self.init_video.init_time()
+        self.init_video.get_video_frame()
+        self.init_video.init_tracker() 
         video_scaling_factor = 2.5
-        self.setMaximumSize(1920/video_scaling_factor, 1080/video_scaling_factor)
+        self.setMaximumSize(int(1920/video_scaling_factor), int(1080/video_scaling_factor))
 
         self.timer = QTimer()
+
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(1)
 
         self.knee_angle = 0
         
     def update_frame(self):
-        
-        self.init_video.getFrame() 
+
+        self.init_video.get_video_frame()
         self.current_frame = int(self.init_video.camera.get(cv2.CAP_PROP_POS_FRAMES))
-        self.init_video.removeEmptyBoxes()
-        self.init_video.checkMarkers()
-        self.init_video.getCenters()  
+        self.init_video.remove_empty_boxes()
+        self.init_video.check_markers()
+        self.init_video.markers_centers()  
         self.init_video.gait_direction()
-        self.init_video.joint_angle()
-            
+        self.init_video.get_filtered_angles()
+
         self.init_video.lines()
         self.init_video.labels()
-        self.init_video.timeStop()
+        self.init_video.end_time()
         self.video_frame = self.init_video.new_frame
 
-        self.init_video.displayWindow()  #* Display Window <-- <-- <-- <-- <-- 
+        self.init_video.display_window()  #* Display Window <-- <-- <-- <-- <-- 
 
         self.video_frame = cv2.cvtColor(self.video_frame, cv2.COLOR_BGR2RGB)
         self.video_frame = cv2.resize(self.video_frame, (self.maximumWidth(), self.maximumHeight()))
         height, width, channels = self.video_frame.shape
         q_image = QImage(self.video_frame.data, width, height, channels * width, QImage.Format_RGB888)
         self.setPixmap(QPixmap.fromImage(q_image))
-        
-    def getAngle(self, joint):
+    
+    def angle_value(self, joint:str):
         angles = None
         if joint == "Hip":
             angles = self.init_video.hip_angles
@@ -71,6 +73,7 @@ class VideoData(QLabel):
         for angle in angles:
              final_angle = angle
         return final_angle
+            
         
     def toggle_show_lines(self, value):
         self.init_video.showLines = value
@@ -456,18 +459,18 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(devi_info_frame)
         '''
         self.timer = QTimer()
-        self.timer.timeout.connect(lambda: self.update_values("Hip"))
+        self.timer.timeout.connect(lambda: self.update_angle_values("Hip"))
         self.timer.start(int(1000/120))
 
         self.timer2 = QTimer()
-        self.timer2.timeout.connect(lambda: self.update_values("Knee"))
+        self.timer2.timeout.connect(lambda: self.update_angle_values("Knee"))
         self.timer2.start(int(1000/120))
 
         self.timer3 = QTimer()
-        self.timer3.timeout.connect(lambda: self.update_values("Ankle"))
+        self.timer3.timeout.connect(lambda: self.update_angle_values("Ankle"))
         self.timer3.start(int(1000/120))
     
-    def findMaxMin(self, joint:str, y_history):
+    def angle_max_min(self, joint:str, y_history):
         max_y = float('-inf')
         min_y = float('inf')
         
@@ -510,7 +513,7 @@ class MainWindow(QMainWindow):
             copied_list_y = copied_list_y[lower_threshold:upper_threshold]
 
             if self.video_widget.init_video.direction == "right_to_left":
-                stance_frame_RTL, swing_frame_RTL = self.video_widget.init_video.gait_phases()
+                stance_frame_RTL, swing_frame_RTL = self.video_widget.init_video.gait_phases_RTL()
 
                 if len(copied_list_x) > 0: 
                     self.min_value_x_RTL = min(copied_list_x)
@@ -570,14 +573,14 @@ class MainWindow(QMainWindow):
                     self.phases_summary.setText(f"Same stance phase in both legs")
 
 
-    def update_values(self, angle:str):
+    def update_angle_values(self, angle:str):
         lower_threshold = 5
         upper_threshold = -5
         #? x = current_frame / fps (fps in this case is 120)
         x = self.video_widget.current_frame / self.video_widget.init_video.fps_rate
 
         if angle == "Hip":
-            y = self.video_widget.getAngle("Hip")
+            y = self.video_widget.angle_value("Hip")
             if self.video_widget.init_video.direction == "right_to_left":
                 self.x_history.append(x)
                 self.y_history.append(y)   
@@ -590,7 +593,7 @@ class MainWindow(QMainWindow):
                 self.ax.autoscale_view()
                 self.ax.set_ylim([-20, 30])
                 self.canvas.draw()
-                self.findMaxMin("Hip", self.y_history)
+                self.angle_max_min("Hip", self.y_history)
 
             else:
 
@@ -605,12 +608,12 @@ class MainWindow(QMainWindow):
                 self.ax_2.autoscale_view()
                 self.ax_2.set_ylim([-20, 30])
                 self.canvas_2.draw()
-                self.findMaxMin("Hip", self.y_history_2)
+                self.angle_max_min("Hip", self.y_history_2)
 
             self.hip_angle_label.setText(f"Current hip angle: {round(y, 2)}°")
 
         elif angle == "Knee":
-            y = self.video_widget.getAngle("Knee")
+            y = self.video_widget.angle_value("Knee")
             if self.video_widget.init_video.direction == "right_to_left":
                 self.x_history2.append(x)  
                 self.y_history2.append(y)  
@@ -623,7 +626,7 @@ class MainWindow(QMainWindow):
                 self.ax2.autoscale_view()  
                 self.ax2.set_ylim([-5, 70])
                 self.canvas.draw()
-                self.findMaxMin("Knee", self.y_history2)
+                self.angle_max_min("Knee", self.y_history2)
 
             else:
                 self.x_history2_2.append(x)  
@@ -637,12 +640,12 @@ class MainWindow(QMainWindow):
                 self.ax2_2.autoscale_view()  
                 self.ax2_2.set_ylim([-5, 70])
                 self.canvas_2.draw()
-                self.findMaxMin("Knee", self.y_history2_2)
+                self.angle_max_min("Knee", self.y_history2_2)
 
             self.knee_angle_label.setText(f"Current knee angle: {round(y, 2)}°")
 
         elif angle == "Ankle":
-            y = self.video_widget.getAngle("Ankle")
+            y = self.video_widget.angle_value("Ankle")
             if self.video_widget.init_video.direction == "right_to_left":
                 self.x_history3.append(x)  
                 self.y_history3.append(y)  
@@ -655,7 +658,7 @@ class MainWindow(QMainWindow):
                 self.ax3.autoscale_view()  
                 self.ax3.set_ylim([-20, 25])
                 self.canvas.draw()
-                self.findMaxMin("Ankle", self.y_history3)
+                self.angle_max_min("Ankle", self.y_history3)
             else:
                 self.x_history3_2.append(x)  
                 self.y_history3_2.append(y)  
@@ -668,7 +671,7 @@ class MainWindow(QMainWindow):
                 self.ax3_2.autoscale_view()  
                 self.ax3_2.set_ylim([-20, 25])
                 self.canvas_2.draw()
-                self.findMaxMin("Ankle", self.y_history3_2)
+                self.angle_max_min("Ankle", self.y_history3_2)
 
             self.ankle_angle_label.setText(f"Current ankle angle: {round(y, 2)}°")
 
