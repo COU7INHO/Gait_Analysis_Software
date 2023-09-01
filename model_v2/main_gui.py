@@ -15,6 +15,7 @@ from pdf_report import PdfGen
 import copy
 
 
+
 class VideoData(QLabel):
     def __init__(self):
         super(VideoData, self).__init__()
@@ -363,7 +364,7 @@ class MainWindow(QMainWindow):
         dev_frame = QFrame()
         dev_frame_layout = QVBoxLayout()
         dev_frame.setLayout(dev_frame_layout)
-        
+
         dev_frame_title = QLabel("Gait deviations")
         dev_frame_title.setStyleSheet("font-weight: bold; font-size: 16px; padding: 5px;")
 
@@ -375,7 +376,8 @@ class MainWindow(QMainWindow):
         dev_frame_layout.addWidget(self.phases_summary)
 
 
-
+        
+        '''
         corrections_frame = QFrame()
         corrections_frame_layout = QVBoxLayout()
         corrections_frame.setLayout(corrections_frame_layout)
@@ -384,11 +386,11 @@ class MainWindow(QMainWindow):
         corrections_frame_title.setStyleSheet("font-weight: bold; font-size: 16px; padding: 5px;")
 
         corrections_frame_layout.addWidget(corrections_frame_title)
-
+        video_info_layout.addWidget(corrections_frame)
+        '''
 
         video_info_layout.addWidget(angles_values_frame)
         video_info_layout.addWidget(dev_frame)
-        video_info_layout.addWidget(corrections_frame)
 
         video_info_frame.setLayout(video_info_layout)
         
@@ -549,28 +551,29 @@ class MainWindow(QMainWindow):
 
                     line.set_data(normalized_values_x, copied_list_y)
 
-            if self.time_difference_RTL is None or self.time_difference_LTR is None:
-                self.gait_phases_time.setText(f"Stance phase diff: calculating...")
 
-            
-            if self.time_difference_RTL is not None and self.time_difference_LTR is not None:
-                time_difference_difference = self.time_difference_RTL - self.time_difference_LTR
-                self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
+    def gait_duration(self):
+        if self.time_difference_RTL is None or self.time_difference_LTR is None:
+            self.gait_phases_time.setText(f"Stance phase diff: calculating...")
+        
+        if self.time_difference_RTL is not None and self.time_difference_LTR is not None:
+            time_difference_difference = self.time_difference_RTL - self.time_difference_LTR
+            self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
 
-                if self.time_difference_RTL > self.time_difference_LTR:
-                    self.percent_diff = (self.time_difference_RTL - self.time_difference_LTR) / self.time_difference_RTL * 100
-                    self.phases_summary.setText(f"The left leg had a {self.percent_diff:.2f}% stance phase longer")
-                    if self.percent_diff > 15:
-                        self.phases_summary.setStyleSheet("color: red;")
+            if self.time_difference_RTL > self.time_difference_LTR:
+                self.percent_diff = (self.time_difference_RTL - self.time_difference_LTR) / self.time_difference_RTL * 100
+                self.phases_summary.setText(f"The left leg had a {self.percent_diff:.2f}% stance phase longer")
+                if self.percent_diff > 15:
+                    self.phases_summary.setStyleSheet("color: red;")
 
-                elif self.time_difference_RTL < self.time_difference_LTR:
-                    self.percent_diff = (self.time_difference_LTR - self.time_difference_RTL) / self.time_difference_LTR * 100
-                    self.phases_summary.setText(f"The right leg had a {self.percent_diff:.2f}% stance phase longer")
-                    if self.percent_diff > 15:
-                        self.phases_summary.setStyleSheet("color: red;")
-                    
-                else:
-                    self.phases_summary.setText(f"Same stance phase in both legs")
+            elif self.time_difference_RTL < self.time_difference_LTR:
+                self.percent_diff = (self.time_difference_LTR - self.time_difference_RTL) / self.time_difference_LTR * 100
+                self.phases_summary.setText(f"The right leg had a {self.percent_diff:.2f}% stance phase longer")
+                if self.percent_diff > 15:
+                    self.phases_summary.setStyleSheet("color: red;")
+                
+            else:
+                self.phases_summary.setText(f"Same stance phase in both legs")
 
 
     def update_angle_values(self, angle:str):
@@ -578,6 +581,7 @@ class MainWindow(QMainWindow):
         upper_threshold = -5
         #? x = current_frame / fps (fps in this case is 120)
         x = self.video_widget.current_frame / self.video_widget.init_video.fps_rate
+        self.gait_duration()
 
         if angle == "Hip":
             y = self.video_widget.angle_value("Hip")
