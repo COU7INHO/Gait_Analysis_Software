@@ -104,7 +104,7 @@ class MotionAnalysis:
             self.new_frame = self.frame.copy()
         else:
             self.new_frame = None
-            print("Frame not available")
+            print("\nFrame not available\n")
 
         # Calibrate horizontally
         if self.start_point_horizontal is not None and self.end_point_horizontal is not None and self.draw_horizontal_line:

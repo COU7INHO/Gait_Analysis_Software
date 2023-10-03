@@ -368,98 +368,59 @@ class MainWindow(QMainWindow):
         dev_frame_title = QLabel("Gait deviations")
         dev_frame_title.setStyleSheet("font-weight: bold; font-size: 16px; padding: 5px;")
 
-        self.gait_phases_time = QLabel()         
-        self.phases_summary = QLabel()
+        self.gait_phases_time = QLabel()    
 
         dev_frame_layout.addWidget(dev_frame_title)
         dev_frame_layout.addWidget(self.gait_phases_time)
-        dev_frame_layout.addWidget(self.phases_summary)
+
+        self.vaulting_dev = QLabel()
+        self.vaulting_dev_button = QPushButton("Correction")
+        self.vaulting_dev_button.setStyleSheet("background-color: #D2F9D3;")
+        self.vaulting_dev_button.setFixedSize(80, 40)  
+        self.vaulting_dev_button.setVisible(False)  
+
+        vaulting_layout = QHBoxLayout()    
+        vaulting_layout.addWidget(self.vaulting_dev)
+        vaulting_layout.addWidget(self.vaulting_dev_button)
+        dev_frame_layout.addLayout(vaulting_layout)
 
 
-        
-        '''
-        corrections_frame = QFrame()
-        corrections_frame_layout = QVBoxLayout()
-        corrections_frame.setLayout(corrections_frame_layout)
+        self.knee_hyp_ext = QLabel()
+        self.knee_hyp_ext_button = QPushButton("Correction")
+        self.knee_hyp_ext_button.setStyleSheet("background-color: #D2F9D3;")
+        self.knee_hyp_ext_button.setFixedSize(80, 40)  
+        self.knee_hyp_ext_button.setVisible(False)  
+    
+        knee_hyp_ext_layout = QHBoxLayout()    
+        knee_hyp_ext_layout.addWidget(self.knee_hyp_ext)
+        knee_hyp_ext_layout.addWidget(self.knee_hyp_ext_button)
+        dev_frame_layout.addLayout(knee_hyp_ext_layout)
 
-        corrections_frame_title = QLabel("Corrections")
-        corrections_frame_title.setStyleSheet("font-weight: bold; font-size: 16px; padding: 5px;")
 
-        corrections_frame_layout.addWidget(corrections_frame_title)
-        video_info_layout.addWidget(corrections_frame)
-        '''
+        self.trunk_elev = QLabel()
+        self.trunk_elev_button = QPushButton("Correction")
+        self.trunk_elev_button.setStyleSheet("background-color: #D2F9D3;")
+        self.trunk_elev_button.setFixedSize(80, 40)  
+        self.trunk_elev_button.setVisible(False)  
+
+        trunk_elev_layout = QHBoxLayout()    
+        trunk_elev_layout.addWidget(self.trunk_elev)
+        trunk_elev_layout.addWidget(self.trunk_elev_button)
+        dev_frame_layout.addLayout(trunk_elev_layout)
 
         video_info_layout.addWidget(angles_values_frame)
         video_info_layout.addWidget(dev_frame)
 
         video_info_frame.setLayout(video_info_layout)
-        
+
         video_frame_layout.addWidget(video_info_frame)
 
         video_frame.setFixedHeight(WINDOW_HEIGHT)
 
         main_layout.addWidget(video_frame)
 
-        ''' 
-#* ############################### devi_info_frame ###############################
-        devi_info_frame = QFrame()
-        devi_info_frame.setFrameShape(QFrame.NoFrame)
-        devi_info_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
 
-        devi_info_layout = QVBoxLayout()
-        devi_info_frame.setLayout(devi_info_layout)
 
-        # Actions frame
-        actions_frame = QFrame()
-
-        actions_frame.setFrameShape(QFrame.NoFrame)
-        actions_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
-        actions_frame.setFixedSize(374, 140)
-
-        save_button = QPushButton("Save results")
-        save_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 2px solid black;")
-        save_button.clicked.connect(self.open_save_dialog)
-
-        new_analysis_button = QPushButton("Start a new analysis")
-        new_analysis_button.setStyleSheet("background-color: white; border-radius: 7px; padding: 10px; border: 2px solid black;")
-
-        actions_layout = QVBoxLayout()
-        actions_frame.setLayout(actions_layout)
-        actions_layout.setAlignment(Qt.AlignHCenter)
-        actions_layout.addWidget(save_button)
-        actions_layout.addWidget(new_analysis_button)
-
-        # Deviations frame
-        deviations_frame = QFrame()
-        deviations_frame.setFrameShape(QFrame.StyledPanel)
-        deviations_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
-
-        deviations_label = QLabel("Deviations")
-
-        deviations_layout = QVBoxLayout()
-        deviations_layout.addWidget(deviations_label)
-        deviations_frame.setLayout(deviations_layout)
-
-        # Corrections frame
-        corrections_frame = QFrame()
-        corrections_frame.setFrameShape(QFrame.StyledPanel)
-        corrections_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
-
-        corrections_label = QLabel("Corrections")
-
-        corrections_layout = QVBoxLayout()
-        corrections_layout.addWidget(corrections_label)
-        corrections_frame.setLayout(corrections_layout)
-
-        # Add frames to the vertical layout
-        devi_info_layout.addWidget(actions_frame)
-        devi_info_layout.addWidget(deviations_frame)
-        devi_info_layout.addWidget(corrections_frame)
-
-        devi_info_frame.setFixedSize(400, WINDOW_HEIGHT)
-
-        main_layout.addWidget(devi_info_frame)
-        '''
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.update_angle_values("Hip"))
         self.timer.start(int(1000/120))
@@ -554,26 +515,54 @@ class MainWindow(QMainWindow):
 
     def gait_duration(self):
         if self.time_difference_RTL is None or self.time_difference_LTR is None:
-            self.gait_phases_time.setText(f"Stance phase diff: calculating...")
+            self.gait_phases_time.setText(f"Analyzing gait deviations...")
         
         if self.time_difference_RTL is not None and self.time_difference_LTR is not None:
             time_difference_difference = self.time_difference_RTL - self.time_difference_LTR
-            self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
+            #self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
 
             if self.time_difference_RTL > self.time_difference_LTR:
                 self.percent_diff = (self.time_difference_RTL - self.time_difference_LTR) / self.time_difference_RTL * 100
-                self.phases_summary.setText(f"The left leg had a {self.percent_diff:.2f}% stance phase longer")
-                if self.percent_diff > 15:
-                    self.phases_summary.setStyleSheet("color: red;")
+                self.vaulting_dev.setText(f"Vaulting")
+                self.knee_hyp_ext.setText(f"Knee hyperextension")
+                self.trunk_elev.setText(f"Trunk elevation deviation")
+
+                if self.percent_diff > 1:
+                    self.vaulting_dev.setStyleSheet("color: red;")
+                    self.vaulting_dev_button.setVisible(True)  
+                    self.vaulting_dev_button.clicked.connect(lambda: self.correction_window(f"Stance phase diff: {time_difference_difference: .2f} seconds\nThe left leg had a {self.percent_diff:.2f}% stance phase longer \nCorreção 1\nCorreção 2\nCorreção 3"))
+                   
+                    self.knee_hyp_ext.setStyleSheet("color: green;")
+                    self.knee_hyp_ext_button.setVisible(True)  
+                    self.knee_hyp_ext_button.clicked.connect(lambda: self.correction_window("Knee hyperextension\nCorreção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+
+                    self.trunk_elev.setStyleSheet("color: green;")
+                    self.trunk_elev_button.setVisible(True)  
+                    self.trunk_elev_button.clicked.connect(lambda: self.correction_window("Correção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+
 
             elif self.time_difference_RTL < self.time_difference_LTR:
                 self.percent_diff = (self.time_difference_LTR - self.time_difference_RTL) / self.time_difference_LTR * 100
-                self.phases_summary.setText(f"The right leg had a {self.percent_diff:.2f}% stance phase longer")
-                if self.percent_diff > 15:
-                    self.phases_summary.setStyleSheet("color: red;")
-                
+                self.vaulting_dev.setText(f"Vaulting")
+                self.knee_hyp_ext.setText(f"Knee hyperextension")
+                self.trunk_elev.setText(f"Trunk elevation deviation")
+
+                if self.percent_diff > 1:
+                    self.vaulting_dev.setStyleSheet("color: red;")
+                    self.vaulting_dev_button.setVisible(True)  
+                    self.vaulting_dev_button.clicked.connect(lambda: self.correction_window(f"Stance phase diff: {time_difference_difference: .2f} seconds\nThe left leg had a {self.percent_diff:.2f}% stance phase longer \nCorreção 1\nCorreção 2\nCorreção 3"))
+                    
+                    self.knee_hyp_ext.setStyleSheet("color: green;")
+                    self.knee_hyp_ext_button.setVisible(True)  
+                    self.knee_hyp_ext_button.clicked.connect(lambda: self.correction_window("Knee hyperextension\nCorreção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+
+                    self.trunk_elev.setStyleSheet("color: green;")
+                    self.trunk_elev_button.setVisible(True)  
+                    self.trunk_elev_button.clicked.connect(lambda: self.correction_window("Correção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+
             else:
-                self.phases_summary.setText(f"Same stance phase in both legs")
+                self.vaulting_dev.setText(f"Same stance phase in both legs")
+                self.vaulting_dev_button.setVisible(False)  
 
 
     def update_angle_values(self, angle:str):
@@ -707,6 +696,26 @@ class MainWindow(QMainWindow):
 
         dialog.setLayout(layout)
         dialog.exec_()
+
+
+    def correction_window(self, label_text):
+        info_window = InfoWindow(label_text)
+        info_window.exec_()
+
+class InfoWindow(QDialog):
+    def __init__(self, label_text):
+        super().__init__()
+
+        self.setWindowTitle("Info Window")
+        self.setGeometry(200, 200, 400, 300)
+
+        layout = QVBoxLayout()
+
+        info_label = QLabel(f"These are the corrections: \n{label_text}.")
+        layout.addWidget(info_label)
+
+        self.setLayout(layout)
+
 
 
 if __name__ == '__main__':
