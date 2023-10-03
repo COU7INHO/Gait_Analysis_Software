@@ -12,7 +12,7 @@ class AmputeeAnalyzer(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle('Amputee Analyzer')
-        self.setFixedSize(300, 150)
+        self.setFixedSize(300, 250)
 
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
@@ -31,6 +31,26 @@ class AmputeeAnalyzer(QMainWindow):
         top_layout.addWidget(add_button)
 
         main_layout.addLayout(top_layout)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        main_layout.addWidget(line)
+
+        calib_layout = QVBoxLayout()
+
+        x_calib_label = QLabel("Horizontal object length")
+        self.x_calib = QSpinBox()
+
+        y_calib_label = QLabel("Vertical object length")
+        self.y_calib = QSpinBox()
+
+        calib_layout.addWidget(x_calib_label)
+        calib_layout.addWidget(self.x_calib)
+        calib_layout.addWidget(y_calib_label)
+        calib_layout.addWidget(self.y_calib)
+
+        main_layout.addLayout(calib_layout)
 
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
@@ -155,7 +175,6 @@ class PatientInfoDialog(QDialog):
             self.accept()
         except Exception:
             print("Error")
-
 class AccessPatients(QDialog):
     def __init__(self):
         super().__init__()
@@ -165,45 +184,86 @@ class AccessPatients(QDialog):
 
         layout = QVBoxLayout()
 
+        self.name_filter = QLineEdit()
+        self.district_filter = QLineEdit()
+
+        filter_patient = [
+            ('Name:', self.name_filter),
+            ('District:', self.district_filter)
+        ]
+
+        filter_layout = QHBoxLayout()
+
+        for label, widget in filter_patient:
+            label_widget = QLabel(label)
+            filter_layout.addWidget(label_widget)
+            filter_layout.addWidget(widget)
+
+        filter_btn = QPushButton("Filter")
+        filter_layout.addWidget(filter_btn)
+        filter_btn.clicked.connect(self.filter_patient)
+
+        layout.addLayout(filter_layout)
+
         self.tableWidget = QTableWidget(self)
         layout.addWidget(self.tableWidget)
 
         self.display_data()
         self.setLayout(layout)
 
-        self.display_data()
+    def filter_patient(self):
+        name_filter = self.name_filter.text()
+        district_filter = self.district_filter.text()
+        query = "SELECT * FROM patient WHERE name LIKE %s AND district LIKE %s;"
 
-    def display_data(self):
         try:
-            conn = psycopg2.connect(
+            self.cur.execute(query, ('%' + name_filter + '%', '%' + district_filter + '%'))
+            rows = self.cur.fetchall()
+            self.update_table_widget(rows)
+        except psycopg2.Error as e:
+            print("Error executing SQL query:", e)
+
+    def connect_to_database(self):
+        try:
+            self.conn = psycopg2.connect(
                 dbname="postgres",
                 user="postgres",
-                password="admin"
+                password="admin",
             )
-            
-            cursor = conn.cursor()
+            self.cur = self.conn.cursor()
+        except psycopg2.Error as e:
+            print("Error connecting to database:", e)
 
-            query = "SELECT * FROM patient;"
-            cursor.execute(query)
+    def display_data(self):
+        self.connect_to_database()
 
-            rows = cursor.fetchall()
+        query = "SELECT * FROM patient ORDER BY name;"
+        #query = "SELECT name, age, district FROM patient ORDER BY name;"
 
-            self.tableWidget.setRowCount(len(rows))
-            self.tableWidget.setColumnCount(len(cursor.description))
-            headers = [desc[0] for desc in cursor.description]
-            self.tableWidget.setHorizontalHeaderLabels(headers)
+        self.cur.execute(query)
 
-            for i, row in enumerate(rows):
-                for j, value in enumerate(row):
-                    item = QTableWidgetItem(str(value))
-                    self.tableWidget.setItem(i, j, item)
+        rows = self.cur.fetchall()
 
-            cursor.close()
-            conn.close()
+        self.tableWidget.setRowCount(len(rows))
+        self.tableWidget.setColumnCount(len(self.cur.description))
+        headers = [desc[0] for desc in self.cur.description]
+        self.tableWidget.setHorizontalHeaderLabels(headers)
 
-        except Exception as e:
-            print("Error:", str(e))
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.tableWidget.setItem(i, j, item)
 
+
+    def update_table_widget(self, rows):
+        self.tableWidget.setRowCount(len(rows))
+
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.tableWidget.setItem(i, j, item)
+
+        self.tableWidget.resizeColumnsToContents()
 
 def main():
     app = QApplication(sys.argv)
