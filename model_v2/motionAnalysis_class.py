@@ -1,14 +1,14 @@
+import math
+from time import time
 
 import cv2
 import numpy as np
-from time import time
-import math
 from detection_class import MarkerDetection
 
 
 class MotionAnalysis:
     def __init__(self, cameraID, window_name, n_markers=5):
-        self.cameraID = cameraID    
+        self.cameraID = cameraID
 
         self.window_name = window_name
         self.names = ["Shoulder", "Trochanter", "Knee", "Ankle", "V_Metatarsal"]
@@ -25,10 +25,10 @@ class MotionAnalysis:
         self.filtered_ankle_angles = []
         self.direction = "left_to_right"
         self.showLines = True
-        self.showLabels= True
+        self.showLabels = True
         self.showbbox = True
 
-        #*################################
+        # *################################
         self.start_point_horizontal = None
         self.end_point_horizontal = None
         self.clicked_horizontal = False
@@ -61,13 +61,22 @@ class MotionAnalysis:
 
         self.fps_rate = 120
 
-#*######################################
+    # *######################################
 
-    def draw_line_on_frame(self, frame, start_point, end_point, line_length, display=True):
+    def draw_line_on_frame(
+        self, frame, start_point, end_point, line_length, display=True
+    ):
         if display:
             cv2.line(frame, start_point, end_point, (0, 255, 0), 2)
-            cv2.putText(frame, f"{line_length} cm", (start_point[0], start_point[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.putText(
+                frame,
+                f"{line_length} cm",
+                (start_point[0], start_point[1] - 10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 255, 0),
+                2,
+            )
 
     def handle_mouse_event(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:  # Click left button
@@ -85,8 +94,8 @@ class MotionAnalysis:
             else:
                 self.start_point_vertical = (x, y)
                 self.clicked_vertical = True
-#*######################################
 
+    # *######################################
 
     def open_camera(self):
         self.camera = cv2.VideoCapture(self.cameraID)
@@ -107,28 +116,51 @@ class MotionAnalysis:
             print("\nFrame not available\n")
 
         # Calibrate horizontally
-        if self.start_point_horizontal is not None and self.end_point_horizontal is not None and self.draw_horizontal_line:
-            length_horizontal = math.sqrt((self.end_point_horizontal[0] - self.start_point_horizontal[0]) ** 2 +
-                                            (self.end_point_horizontal[1] - self.start_point_horizontal[1]) ** 2)
+        if (
+            self.start_point_horizontal is not None
+            and self.end_point_horizontal is not None
+            and self.draw_horizontal_line
+        ):
+            length_horizontal = math.sqrt(
+                (self.end_point_horizontal[0] - self.start_point_horizontal[0]) ** 2
+                + (self.end_point_horizontal[1] - self.start_point_horizontal[1]) ** 2
+            )
             # Calculate the conversion factor from pixels to centimeters horizontally
             real_length_horizontal = 10.32
             self.pixel_to_cm_horizontal = real_length_horizontal / length_horizontal
 
-            self.draw_line_on_frame(self.new_frame, self.start_point_horizontal, self.end_point_horizontal,
-                                    real_length_horizontal, display=True)
+            self.draw_line_on_frame(
+                self.new_frame,
+                self.start_point_horizontal,
+                self.end_point_horizontal,
+                real_length_horizontal,
+                display=True,
+            )
 
         # Calibrate vertically
-        if self.start_point_vertical is not None and self.end_point_vertical is not None and self.draw_vertical_line:
-            length_vertical = math.sqrt((self.end_point_vertical[0] - self.start_point_vertical[0]) ** 2 +
-                                        (self.end_point_vertical[1] - self.start_point_vertical[1]) ** 2)
+        if (
+            self.start_point_vertical is not None
+            and self.end_point_vertical is not None
+            and self.draw_vertical_line
+        ):
+            length_vertical = math.sqrt(
+                (self.end_point_vertical[0] - self.start_point_vertical[0]) ** 2
+                + (self.end_point_vertical[1] - self.start_point_vertical[1]) ** 2
+            )
 
             # Calculate the conversion factor from pixels to centimeters vertically
             real_length_vertical = 4.21
             self.pixel_to_cm_vertical = real_length_vertical / length_vertical
 
-            self.draw_line_on_frame(self.new_frame, self.start_point_vertical, self.end_point_vertical,
-                                    real_length_vertical, display=True)
-#*######################################
+            self.draw_line_on_frame(
+                self.new_frame,
+                self.start_point_vertical,
+                self.end_point_vertical,
+                real_length_vertical,
+                display=True,
+            )
+
+    # *######################################
 
     def init_tracker(self):
         markerDDetection = MarkerDetection(self.new_frame)
@@ -143,15 +175,47 @@ class MotionAnalysis:
         self.boxes = [box for box in self.boxes if np.any(box != [0, 0, 0, 0])]
 
     def check_markers(self):
-        if len(self.boxes) != self.n_markers :
+        if len(self.boxes) != self.n_markers:
             if self.n_markers - len(self.boxes) == 1:
-                cv2.putText(self.new_frame, "1 marker missing", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+                cv2.putText(
+                    self.new_frame,
+                    "1 marker missing",
+                    (10, 110),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (0, 0, 255),
+                    2,
+                )
             elif self.n_markers - len(self.boxes) == -1:
-                cv2.putText(self.new_frame, "1 marker in excess", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+                cv2.putText(
+                    self.new_frame,
+                    "1 marker in excess",
+                    (10, 110),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (0, 0, 255),
+                    2,
+                )
             elif self.n_markers - len(self.boxes) > 1:
-                cv2.putText(self.new_frame, f"{int(self.n_markers - len(self.boxes))} markers missing", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+                cv2.putText(
+                    self.new_frame,
+                    f"{int(self.n_markers - len(self.boxes))} markers missing",
+                    (10, 110),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (0, 0, 255),
+                    2,
+                )
             elif self.n_markers - len(self.boxes) < -1:
-                cv2.putText(self.new_frame, f"{abs(int(self.n_markers - len(self.boxes)))} markers in excess", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
+                cv2.putText(
+                    self.new_frame,
+                    f"{abs(int(self.n_markers - len(self.boxes)))} markers in excess",
+                    (10, 110),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (0, 0, 255),
+                    2,
+                )
 
             markerDDetection = MarkerDetection(self.new_frame)
             self.new_frame, self.boxes, self.indexes = markerDDetection.detect()
@@ -159,12 +223,22 @@ class MotionAnalysis:
             self.multiTracker = cv2.legacy.MultiTracker_create()
 
             for box in self.boxes:
-                self.multiTracker.add(cv2.legacy.TrackerCSRT_create(), self.new_frame, box)
+                self.multiTracker.add(
+                    cv2.legacy.TrackerCSRT_create(), self.new_frame, box
+                )
         else:
-            cv2.putText(self.new_frame, "Tracking", (10, 110), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 3)
-        
+            cv2.putText(
+                self.new_frame,
+                "Tracking",
+                (10, 110),
+                cv2.FONT_HERSHEY_DUPLEX,
+                1,
+                (0, 255, 0),
+                3,
+            )
+
             self.tracking, self.boxes = self.multiTracker.update(self.new_frame)
-    
+
     def markers_centers(self):
         self.sorted_centers = []
         self.centers = []
@@ -175,17 +249,16 @@ class MotionAnalysis:
             w = int(newbox[2])
             h = int(newbox[3])
 
-            center = (x + w//2, y + h//2)
+            center = (x + w // 2, y + h // 2)
             self.x_coord, self.y_coord = center[0], center[1]
             self.sorted_centers.append(((self.x_coord, self.y_coord), i))
             self.centers.append((center, i))
             if self.showbbox:
                 cv2.rectangle(self.new_frame, (x, y), (x + w, y + h), (0, 0, 255), 4)
             cv2.circle(self.new_frame, center, 6, (255, 0, 0), -1)
-    
-    def gait_direction(self):
 
-        if not hasattr(self, 'prev_frame'):
+    def gait_direction(self):
+        if not hasattr(self, "prev_frame"):
             self.prev_frame = self.new_frame.copy()
             return
 
@@ -193,14 +266,29 @@ class MotionAnalysis:
         scale_factor = 0.15
 
         if self.success:
-            resized_prev_frame = cv2.resize(self.prev_frame, None, fx=scale_factor, fy=scale_factor)
-            resized_new_frame = cv2.resize(self.new_frame, None, fx=scale_factor, fy=scale_factor)
+            resized_prev_frame = cv2.resize(
+                self.prev_frame, None, fx=scale_factor, fy=scale_factor
+            )
+            resized_new_frame = cv2.resize(
+                self.new_frame, None, fx=scale_factor, fy=scale_factor
+            )
 
             prev_gray = cv2.cvtColor(resized_prev_frame, cv2.COLOR_BGR2GRAY)
             gray = cv2.cvtColor(resized_new_frame, cv2.COLOR_BGR2GRAY)
 
             # Calculate optical flow using Farneback method
-            flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, pyr_scale=0.5, levels=3, winsize=15, iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
+            flow = cv2.calcOpticalFlowFarneback(
+                prev_gray,
+                gray,
+                None,
+                pyr_scale=0.5,
+                levels=3,
+                winsize=15,
+                iterations=3,
+                poly_n=5,
+                poly_sigma=1.2,
+                flags=0,
+            )
 
             # Calculate the mean flow in the x-direction
             mean_flow_x = np.mean(flow[:, :, 0])
@@ -235,7 +323,6 @@ class MotionAnalysis:
         return angle_degrees
 
     def get_filtered_angles(self):
-
         self.gt_center = []
         self.sorted_centers = sorted(self.sorted_centers, key=lambda x: x[0][1])
 
@@ -244,20 +331,21 @@ class MotionAnalysis:
         self.time_values = []  # Corresponding time values for each center
 
         for i, (_, _) in enumerate(self.sorted_centers):
-
-            distance = 160  #! Colocar uma parte na GUI para inserir este valor em centímetros 
+            distance = (
+                160  #! Colocar uma parte na GUI para inserir este valor em centímetros
+            )
             if prev_x != 0 and prev_y != 0:
                 x_gt = self.centers[1][0][0]
                 y_gt = self.centers[1][0][1]
                 x_le = self.centers[2][0][0]
                 y_le = self.centers[2][0][1]
-                alpha = np.arctan((x_gt - x_le)/(y_gt - y_le))
+                alpha = np.arctan((x_gt - x_le) / (y_gt - y_le))
                 new_x = int(-distance * np.sin(alpha) + x_gt)  #! Atualizar a distancia
                 new_y = int(-distance * np.cos(alpha) + y_gt)  #! Atualizar a distancia
                 if not self.gt_center:
                     self.gt_center.append((new_x, new_y))
 
-                #* Markers coordinates
+                # * Markers coordinates
                 a_marker = (self.centers[0][0][0], self.centers[0][0][1])
                 gt_marker = (new_x, new_y)
                 le_marker = (self.centers[2][0][0], self.centers[2][0][1])
@@ -270,7 +358,7 @@ class MotionAnalysis:
 
                 if self.init_angle_ang == None:
                     self.init_angle_ang = ankle_ang
-                
+
                 ankle_ang -= self.init_angle_ang
                 self.hip_angles.append(hip_ang)
                 self.knee_angles.append(knee_ang)
@@ -314,7 +402,6 @@ class MotionAnalysis:
         self.counting += 1
 
     def gait_phases_RTL(self):
-        
         for value in self.sorted_centers:
             marker = value[1]
             if marker == 4:  # Consider the VM marker
@@ -335,16 +422,15 @@ class MotionAnalysis:
                     self.init_swing_phase = True
                     if self.swing_frame == None:
                         self.swing_frame = current_frame / self.fps_rate
-                        
-                #* Colocar uma nova variável para acabar a swing phase
-                #* quando esta acabar então começa a stance phase outra vez
+
+                # * Colocar uma nova variável para acabar a swing phase
+                # * quando esta acabar então começa a stance phase outra vez
 
                 self.counting += 1
-        
+
         return self.stance_frame, self.swing_frame
-    
+
     def gait_phase_LTR(self):
-        
         for value in self.sorted_centers:
             marker = value[1]
             if marker == 4:  # Consider the VM marker
@@ -365,12 +451,12 @@ class MotionAnalysis:
                     self.init_swing_phase_LTR = True
                     if self.swing_frame_LTR == None:
                         self.swing_frame_LTR = current_frame / self.fps_rate
-                        
-                #* Colocar uma nova variável para acabar a swing phase
-                #* quando esta acabar então começa a stance phase outra vez
+
+                # * Colocar uma nova variável para acabar a swing phase
+                # * quando esta acabar então começa a stance phase outra vez
 
                 self.counting_LTR += 1
-        
+
         return self.stance_frame_LTR, self.swing_frame_LTR
 
     def lines(self):
@@ -381,7 +467,7 @@ class MotionAnalysis:
                     continue
                 x, y = self.centers[i][0][0], self.centers[i][0][1]
                 points.append((x, y))
-                
+
             for center in self.gt_center:
                 points.append((center[0], center[1]))
 
@@ -394,7 +480,7 @@ class MotionAnalysis:
             self.unique_points_list = list(unique_points.values())
 
             for i in range(1, len(points)):
-                cv2.line(self.new_frame, points[i], points[i-1], (0, 255, 0), 3)
+                cv2.line(self.new_frame, points[i], points[i - 1], (0, 255, 0), 3)
 
     def labels(self):
         if self.showLabels:
@@ -404,12 +490,28 @@ class MotionAnalysis:
 
                 x = point[0]
                 y = point[1]
-                cv2.putText(self.new_frame, f"{name}", (x, y - 20), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(
+                    self.new_frame,
+                    f"{name}",
+                    (x, y - 20),
+                    cv2.FONT_HERSHEY_COMPLEX,
+                    0.7,
+                    (255, 255, 255),
+                    2,
+                )
 
     def end_time(self):
-        self.fps = 1/(time() - self.loop_time)
+        self.fps = 1 / (time() - self.loop_time)
         self.loop_time = time()
-        cv2.putText(self.new_frame, f"FPS: {str(round(self.fps, 2))}", (10, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 3)
+        cv2.putText(
+            self.new_frame,
+            f"FPS: {str(round(self.fps, 2))}",
+            (10, 50),
+            cv2.FONT_HERSHEY_DUPLEX,
+            1,
+            (255, 0, 0),
+            3,
+        )
 
     def display_window(self):
         if self.success:

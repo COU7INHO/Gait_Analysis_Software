@@ -1,5 +1,15 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QDialog
+
+from PyQt5.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -32,6 +42,7 @@ class MainWindow(QWidget):
         info_window = InfoWindow(label_text)
         info_window.exec_()
 
+
 class InfoWindow(QDialog):
     def __init__(self, label_text):
         super().__init__()
@@ -45,6 +56,7 @@ class InfoWindow(QDialog):
         layout.addWidget(info_label)
 
         self.setLayout(layout)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

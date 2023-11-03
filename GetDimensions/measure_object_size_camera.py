@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from DetectionClass import HomogeneousBgDetector
 
-
 # Load Aruco detector
 parameters = cv2.aruco.DetectorParameters_create()
 aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_50)
@@ -19,7 +18,6 @@ while True:
     # Get Aruco marker
     corners, _, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
     if corners:
-
         # Draw polygon around the marker
         int_corners = np.int0(corners)
         cv2.polylines(img, int_corners, True, (0, 255, 0), 5)
@@ -48,10 +46,24 @@ while True:
 
             cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
             cv2.polylines(img, [box], True, (255, 0, 0), 2)
-            cv2.putText(img, "Width {} cm".format(round(object_width, 1)), (int(x - 100), int(y - 20)), cv2.FONT_HERSHEY_PLAIN, 2, (100, 200, 0), 2)
-            cv2.putText(img, "Height {} cm".format(round(object_height, 1)), (int(x - 100), int(y + 15)), cv2.FONT_HERSHEY_PLAIN, 2, (100, 200, 0), 2)
-
-
+            cv2.putText(
+                img,
+                "Width {} cm".format(round(object_width, 1)),
+                (int(x - 100), int(y - 20)),
+                cv2.FONT_HERSHEY_PLAIN,
+                2,
+                (100, 200, 0),
+                2,
+            )
+            cv2.putText(
+                img,
+                "Height {} cm".format(round(object_height, 1)),
+                (int(x - 100), int(y + 15)),
+                cv2.FONT_HERSHEY_PLAIN,
+                2,
+                (100, 200, 0),
+                2,
+            )
 
     cv2.imshow("Image", img)
     key = cv2.waitKey(1)

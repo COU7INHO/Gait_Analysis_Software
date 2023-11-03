@@ -1,6 +1,8 @@
 import cv2
-from camera_pose_estimation.object_detector import HomogeneousBgDetector
 import numpy as np
+
+from camera_pose_estimation.object_detector import HomogeneousBgDetector
+
 
 def pose_estimation(cam_index):
     # Load Aruco detector
@@ -12,7 +14,7 @@ def pose_estimation(cam_index):
 
     # Load Cap
     cam = cv2.VideoCapture(cam_index)
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280) 
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     while True:
@@ -21,7 +23,6 @@ def pose_estimation(cam_index):
         # Get Aruco marker
         corners, _, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
         if corners:
-
             # Draw polygon around the marker
             int_corners = np.int0(corners)
             cv2.polylines(img, int_corners, True, (0, 255, 0), 5)
@@ -50,8 +51,24 @@ def pose_estimation(cam_index):
 
                 cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
                 cv2.polylines(img, [box], True, (255, 0, 0), 2)
-                cv2.putText(img, "Width {} cm".format(round(object_width, 1)), (int(x - 100), int(y - 20)), cv2.FONT_HERSHEY_PLAIN, 2, (50, 255, 0), 2)
-                cv2.putText(img, "Height {} cm".format(round(object_height, 1)), (int(x - 100), int(y + 15)), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 255), 2)
+                cv2.putText(
+                    img,
+                    "Width {} cm".format(round(object_width, 1)),
+                    (int(x - 100), int(y - 20)),
+                    cv2.FONT_HERSHEY_PLAIN,
+                    2,
+                    (50, 255, 0),
+                    2,
+                )
+                cv2.putText(
+                    img,
+                    "Height {} cm".format(round(object_height, 1)),
+                    (int(x - 100), int(y + 15)),
+                    cv2.FONT_HERSHEY_PLAIN,
+                    2,
+                    (0, 255, 255),
+                    2,
+                )
 
         cv2.imshow("Image", img)
         key = cv2.waitKey(1)

@@ -1,7 +1,22 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QFrame, \
-    QDialog, QLabel, QLineEdit, QComboBox, QSpinBox, QTableWidget, QTableWidgetItem
+
 import psycopg2
+from PyQt5.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QPushButton,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class AmputeeAnalyzer(QMainWindow):
@@ -11,8 +26,8 @@ class AmputeeAnalyzer(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Amputee Analyzer')
-        self.setFixedSize(300, 250)
+        self.setWindowTitle("Amputee Analyzer")
+        self.setFixedSize(300, 300)
 
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
@@ -21,10 +36,10 @@ class AmputeeAnalyzer(QMainWindow):
 
         top_layout = QHBoxLayout()
 
-        search_button = QPushButton('Search Amputee', self)
+        search_button = QPushButton("Search Amputee", self)
         search_button.clicked.connect(self.access_patients)
 
-        add_button = QPushButton('Add Amputee', self)
+        add_button = QPushButton("Add Amputee", self)
         add_button.clicked.connect(self.add_patient)
 
         top_layout.addWidget(search_button)
@@ -52,13 +67,23 @@ class AmputeeAnalyzer(QMainWindow):
 
         main_layout.addLayout(calib_layout)
 
+        foot_layout = QVBoxLayout()
+        foot_length = QLabel("Foot length:")
+        self.foot_length = QSpinBox()
+
+        foot_layout.addWidget(foot_length)
+        foot_layout.addWidget(self.foot_length)
+
+        main_layout.addLayout(foot_layout)
+
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         line.setFrameShadow(QFrame.Sunken)
+
         main_layout.addWidget(line)
 
         analysis_layout = QHBoxLayout()
-        start_analysis_button = QPushButton('Start Analysis', self)
+        start_analysis_button = QPushButton("Start Analysis", self)
         analysis_layout.addWidget(start_analysis_button)
         main_layout.addLayout(analysis_layout)
 
@@ -70,50 +95,67 @@ class AmputeeAnalyzer(QMainWindow):
         dialog = AccessPatients()
         dialog.exec()
 
-class PatientInfoDialog(QDialog):
 
+class PatientInfoDialog(QDialog):
     def __init__(self):
         super().__init__()
 
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Patient Information')
+        self.setWindowTitle("Patient Information")
         self.setFixedSize(400, 500)
 
         layout = QVBoxLayout()
 
-        name_label = QLabel('Name:')
+        name_label = QLabel("Name:")
         self.name_edit = QLineEdit()
 
-        age_label = QLabel('Age:')
+        age_label = QLabel("Age:")
         self.age_spinbox = QSpinBox()
 
-        amputation_level_label = QLabel('Amputation Level:')
+        amputation_level_label = QLabel("Amputation Level:")
         self.amputation_level_combo = QComboBox()
-        self.amputation_level_combo.addItem('Transtibial')
-        self.amputation_level_combo.addItem('Transfemoral')
+        self.amputation_level_combo.addItem("Transtibial")
+        self.amputation_level_combo.addItem("Transfemoral")
 
-        amputated_limb_label = QLabel('Amputated Limb:')
+        amputated_limb_label = QLabel("Amputated Limb:")
         self.amputated_limb_combo = QComboBox()
-        self.amputated_limb_combo.addItem('Right')
-        self.amputated_limb_combo.addItem('Left')
+        self.amputated_limb_combo.addItem("Right")
+        self.amputated_limb_combo.addItem("Left")
 
-        phone_label = QLabel('Phone Number:')
+        phone_label = QLabel("Phone Number:")
         self.phone_edit = QLineEdit()
 
-        address_label = QLabel('Address:')
+        address_label = QLabel("Address:")
         self.address_edit = QLineEdit()
 
-        zip_code_label = QLabel('Zip Code:')
+        zip_code_label = QLabel("Zip Code:")
         self.zip_code_edit = QLineEdit()
 
-        district_label = QLabel('District:')
+        district_label = QLabel("District:")
         self.district_edit = QComboBox()
         portugal_districts = [
-            'Aveiro', 'Beja', 'Braga', 'Bragança', 'Castelo Branco', 'Coimbra', 'Evora', 'Faro',
-            'Guarda', 'Leiria', 'Lisboa', 'Portalegre', 'Porto', 'Santarém', 'Setúbal', 'Viana do Castelo',
-            'Vila Real', 'Viseu', 'Açores', 'Madeira'
+            "Aveiro",
+            "Beja",
+            "Braga",
+            "Bragança",
+            "Castelo Branco",
+            "Coimbra",
+            "Evora",
+            "Faro",
+            "Guarda",
+            "Leiria",
+            "Lisboa",
+            "Portalegre",
+            "Porto",
+            "Santarém",
+            "Setúbal",
+            "Viana do Castelo",
+            "Vila Real",
+            "Viseu",
+            "Açores",
+            "Madeira",
         ]
 
         for district in sorted(portugal_districts):
@@ -143,19 +185,16 @@ class PatientInfoDialog(QDialog):
         self.setLayout(layout)
 
     def info_to_db(self):
-
         try:
             conn = psycopg2.connect(
-                dbname="postgres",
-                user="postgres",
-                password="admin"
+                dbname="postgres", user="postgres", password="admin"
             )
 
             cursor = conn.cursor()
 
-            insert_query = ("INSERT INTO patient \
+            insert_query = "INSERT INTO patient \
                             (name, age, amputation_level, amputated_limb, phone, address, zip_code, district) \
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
 
             data_to_insert = (
                 self.name_edit.text(),
@@ -165,7 +204,7 @@ class PatientInfoDialog(QDialog):
                 self.phone_edit.text(),
                 self.address_edit.text(),
                 self.zip_code_edit.text(),
-                self.district_edit.currentText()
+                self.district_edit.currentText(),
             )
 
             cursor.execute(insert_query, data_to_insert)
@@ -175,12 +214,14 @@ class PatientInfoDialog(QDialog):
             self.accept()
         except Exception:
             print("Error")
+
+
 class AccessPatients(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle('Patient Information')
-        self.setFixedSize(1000, 400)
+        self.setWindowTitle("Patient Information")
+        self.setFixedSize(1000, 500)
 
         layout = QVBoxLayout()
 
@@ -188,8 +229,8 @@ class AccessPatients(QDialog):
         self.district_filter = QLineEdit()
 
         filter_patient = [
-            ('Name:', self.name_filter),
-            ('District:', self.district_filter)
+            ("Name:", self.name_filter),
+            ("District:", self.district_filter),
         ]
 
         filter_layout = QHBoxLayout()
@@ -217,7 +258,9 @@ class AccessPatients(QDialog):
         query = "SELECT * FROM patient WHERE name LIKE %s AND district LIKE %s;"
 
         try:
-            self.cur.execute(query, ('%' + name_filter + '%', '%' + district_filter + '%'))
+            self.cur.execute(
+                query, ("%" + name_filter + "%", "%" + district_filter + "%")
+            )
             rows = self.cur.fetchall()
             self.update_table_widget(rows)
         except psycopg2.Error as e:
@@ -238,7 +281,7 @@ class AccessPatients(QDialog):
         self.connect_to_database()
 
         query = "SELECT * FROM patient ORDER BY name;"
-        #query = "SELECT name, age, district FROM patient ORDER BY name;"
+        # query = "SELECT name, age, district FROM patient ORDER BY name;"
 
         self.cur.execute(query)
 
@@ -254,7 +297,6 @@ class AccessPatients(QDialog):
                 item = QTableWidgetItem(str(value))
                 self.tableWidget.setItem(i, j, item)
 
-
     def update_table_widget(self, rows):
         self.tableWidget.setRowCount(len(rows))
 
@@ -265,11 +307,13 @@ class AccessPatients(QDialog):
 
         self.tableWidget.resizeColumnsToContents()
 
+
 def main():
     app = QApplication(sys.argv)
     ex = AmputeeAnalyzer()
     ex.show()
     sys.exit(app.exec_())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

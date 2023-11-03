@@ -1,7 +1,7 @@
-import os
 import glob
+import os
 
-folder_path = "/Users/tiagocoutinho/Desktop/Programação/Software/Modelos ML/yolov3 models/2º modelo/Dataset/images/"  
+folder_path = "/Users/tiagocoutinho/Desktop/Programação/Software/Modelos ML/yolov3 models/2º modelo/Dataset/images/"
 
 # Loop through all .txt files in the folder
 for file_path in glob.glob(os.path.join(folder_path, "*.txt")):

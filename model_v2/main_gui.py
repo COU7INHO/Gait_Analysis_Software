@@ -1,33 +1,46 @@
+import copy
 import sys
-import cv2
-import numpy as np
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout, QMenu, QAction, QMainWindow, QPushButton, QDialog, QTextEdit
-from PyQt5.QtGui import QImage, QPixmap, QIcon, QLinearGradient, QColor, QPainter
 
+import cv2
+from info_gui import AmputeeDataInput
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
 from motionAnalysis_class import MotionAnalysis
-from info_gui import AmputeeDataInput
 from pdf_report import PdfGen
-
-import copy
-
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor, QImage, QLinearGradient, QPainter, QPixmap
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMenu,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class VideoData(QLabel):
     def __init__(self):
         super(VideoData, self).__init__()
         self.window_name = "Gait Analysis"
-        self.init_video = MotionAnalysis("/Users/tiagocoutinho/Desktop/videos/2_ciclos.mp4", self.window_name)
+        self.init_video = MotionAnalysis(
+            "/Users/tiagocoutinho/Desktop/videos/2_ciclos.mp4", self.window_name
+        )
 
         self.init_video.open_camera()
         self.init_video.init_time()
         self.init_video.get_video_frame()
-        self.init_video.init_tracker() 
+        self.init_video.init_tracker()
         video_scaling_factor = 2.5
-        self.setMaximumSize(int(1920/video_scaling_factor), int(1080/video_scaling_factor))
+        self.setMaximumSize(
+            int(1920 / video_scaling_factor), int(1080 / video_scaling_factor)
+        )
 
         self.timer = QTimer()
 
@@ -35,14 +48,13 @@ class VideoData(QLabel):
         self.timer.start(1)
 
         self.knee_angle = 0
-        
-    def update_frame(self):
 
+    def update_frame(self):
         self.init_video.get_video_frame()
         self.current_frame = int(self.init_video.camera.get(cv2.CAP_PROP_POS_FRAMES))
         self.init_video.remove_empty_boxes()
         self.init_video.check_markers()
-        self.init_video.markers_centers()  
+        self.init_video.markers_centers()
         self.init_video.gait_direction()
         self.init_video.get_filtered_angles()
 
@@ -51,15 +63,19 @@ class VideoData(QLabel):
         self.init_video.end_time()
         self.video_frame = self.init_video.new_frame
 
-        self.init_video.display_window()  #* Display Window <-- <-- <-- <-- <-- 
+        self.init_video.display_window()  # * Display Window <-- <-- <-- <-- <--
 
         self.video_frame = cv2.cvtColor(self.video_frame, cv2.COLOR_BGR2RGB)
-        self.video_frame = cv2.resize(self.video_frame, (self.maximumWidth(), self.maximumHeight()))
+        self.video_frame = cv2.resize(
+            self.video_frame, (self.maximumWidth(), self.maximumHeight())
+        )
         height, width, channels = self.video_frame.shape
-        q_image = QImage(self.video_frame.data, width, height, channels * width, QImage.Format_RGB888)
+        q_image = QImage(
+            self.video_frame.data, width, height, channels * width, QImage.Format_RGB888
+        )
         self.setPixmap(QPixmap.fromImage(q_image))
-    
-    def angle_value(self, joint:str):
+
+    def angle_value(self, joint: str):
         angles = None
         if joint == "Hip":
             angles = self.init_video.hip_angles
@@ -69,13 +85,12 @@ class VideoData(QLabel):
             angles = self.init_video.ankle_angles
         else:
             raise ValueError("Invalid angle")
-        
+
         final_angle = 0
         for angle in angles:
-             final_angle = angle
+            final_angle = angle
         return final_angle
-            
-        
+
     def toggle_show_lines(self, value):
         self.init_video.showLines = value
 
@@ -84,7 +99,8 @@ class VideoData(QLabel):
 
     def toggle_show_bbox(self, value):
         self.init_video.showbbox = value
-        
+
+
 class GradientFrame(QFrame):
     def __init__(self, start_color, end_color):
         super().__init__()
@@ -99,13 +115,14 @@ class GradientFrame(QFrame):
         gradient.setColorAt(1, self.end_color)
         painter.fillRect(rect, gradient)
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
         # GUI to input amputee data
         self.amputee_data = AmputeeDataInput()
-        self.amputee_data.submit_signal.connect(self.on_submit) 
+        self.amputee_data.submit_signal.connect(self.on_submit)
         self.amputee_data.show()
 
         # Hip angle
@@ -119,7 +136,7 @@ class MainWindow(QMainWindow):
         self.y_history2 = []
         self.x_history2_2 = []
         self.y_history2_2 = []
-        
+
         # Ankle angle
         self.x_history3 = []
         self.y_history3 = []
@@ -128,7 +145,7 @@ class MainWindow(QMainWindow):
 
         self.gait_phase_duration_RTL = False
         self.gait_phase_duration_LTR = False
-        
+
         self.min_value_x_RTL = None
         self.min_value_x_LTR = None
 
@@ -139,9 +156,7 @@ class MainWindow(QMainWindow):
 
         self.percent_diff = None
 
-        
     def on_submit(self):
-
         self.video_widget = VideoData()
         self.init_ui()
         self.show()
@@ -192,11 +207,9 @@ class MainWindow(QMainWindow):
         docs_action = QAction("Documentation", self)
         help_menu.addAction(docs_action)
 
-        
+        # * ############################### FRAMES ###############################
 
-#* ############################### FRAMES ###############################
-        
-#* ############################### Main frame ###############################
+        # * ############################### Main frame ###############################
 
         main_layout = QHBoxLayout()
 
@@ -205,17 +218,21 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
         start_color = QColor(rgb_plot_frame[0], rgb_plot_frame[1], rgb_plot_frame[2])
         end_color = QColor(0, 0, 0)
-        main_widget.setStyleSheet(f"background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {start_color.name()}, stop:1 {end_color.name()});")
+        main_widget.setStyleSheet(
+            f"background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {start_color.name()}, stop:1 {end_color.name()});"
+        )
 
-#* ############################### Plot frame ###############################
+        # * ############################### Plot frame ###############################
 
         plot_frame = QFrame()
-        
+
         plot_frame.setFrameShape(QFrame.NoFrame)
-        plot_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+        plot_frame.setStyleSheet(
+            f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); "
+        )
 
         self.figure = Figure()
-        self.figure.suptitle("Left leg", fontsize=16, fontweight='bold')
+        self.figure.suptitle("Left leg", fontsize=16, fontweight="bold")
 
         self.canvas = FigureCanvas(self.figure)
 
@@ -225,36 +242,41 @@ class MainWindow(QMainWindow):
 
         self.ax = self.figure.add_subplot(311)
         self.ax.set_title("Hip angle")
-        self.line, = self.ax.plot([], [])
-        self.ax.set_xticklabels([]) 
+        (self.line,) = self.ax.plot([], [])
+        self.ax.set_xticklabels([])
 
         self.ax2 = self.figure.add_subplot(312)
         self.ax2.set_ylabel("Angle (degrees)")
         self.ax2.set_title("Knee angle")
-        self.line2, = self.ax2.plot([], [])
-        self.ax2.set_xticklabels([]) 
+        (self.line2,) = self.ax2.plot([], [])
+        self.ax2.set_xticklabels([])
 
         self.ax3 = self.figure.add_subplot(313)
         self.ax3.set_xlabel("Seconds")
         self.ax3.set_title("Ankle angle")
-        self.line3, = self.ax3.plot([], [])
+        (self.line3,) = self.ax3.plot([], [])
 
-        facecolor = (rgb_plot_frame[0] / 255, rgb_plot_frame[1] / 255, rgb_plot_frame[2] / 255)
+        facecolor = (
+            rgb_plot_frame[0] / 255,
+            rgb_plot_frame[1] / 255,
+            rgb_plot_frame[2] / 255,
+        )
         self.figure.set_facecolor(facecolor)
         plot_frame.setFixedSize(400, WINDOW_HEIGHT)
 
         main_layout.addWidget(plot_frame)
 
-#*********************************************************
-
+        # *********************************************************
 
         plot_frame_2 = QFrame()
-        
+
         plot_frame_2.setFrameShape(QFrame.NoFrame)
-        plot_frame_2.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); ")  
+        plot_frame_2.setStyleSheet(
+            f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]}); "
+        )
 
         self.figure_2 = Figure()
-        self.figure_2.suptitle("Right leg", fontsize=16, fontweight='bold')
+        self.figure_2.suptitle("Right leg", fontsize=16, fontweight="bold")
 
         self.canvas_2 = FigureCanvas(self.figure_2)
 
@@ -264,39 +286,49 @@ class MainWindow(QMainWindow):
 
         self.ax_2 = self.figure_2.add_subplot(311)
         self.ax_2.set_title("Hip angle")
-        self.line_2, = self.ax_2.plot([], [])
-        self.ax_2.set_xticklabels([]) 
+        (self.line_2,) = self.ax_2.plot([], [])
+        self.ax_2.set_xticklabels([])
 
         self.ax2_2 = self.figure_2.add_subplot(312)
         self.ax2_2.set_ylabel("Angle (degrees)")
         self.ax2_2.set_title("Knee angle")
-        self.line2_2, = self.ax2_2.plot([], [])
-        self.ax2_2.set_xticklabels([]) 
+        (self.line2_2,) = self.ax2_2.plot([], [])
+        self.ax2_2.set_xticklabels([])
 
         self.ax3_2 = self.figure_2.add_subplot(313)
         self.ax3_2.set_xlabel("Seconds")
         self.ax3_2.set_title("Ankle angle")
-        self.line3_2, = self.ax3_2.plot([], [])
+        (self.line3_2,) = self.ax3_2.plot([], [])
 
-        facecolor = (rgb_plot_frame[0] / 255, rgb_plot_frame[1] / 255, rgb_plot_frame[2] / 255)
+        facecolor = (
+            rgb_plot_frame[0] / 255,
+            rgb_plot_frame[1] / 255,
+            rgb_plot_frame[2] / 255,
+        )
         self.figure_2.set_facecolor(facecolor)
         plot_frame_2.setFixedSize(400, WINDOW_HEIGHT)
 
         main_layout.addWidget(plot_frame_2)
 
-#* ############################### Central frame ###############################
+        # * ############################### Central frame ###############################
 
         person_info_frame = QFrame()
         person_info_frame.setFrameShape(QFrame.NoFrame)
-        person_info_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
-        
+        person_info_frame.setStyleSheet(
+            f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});"
+        )
+
         person_info_layout = QHBoxLayout()
         self.name = QLabel()
         self.amp_level = QLabel()
         self.amp_side = QLabel()
         self.name.setText(f"<html><b>Name:</b> {self.amputee_data.name}")
-        self.amp_level.setText(f"<html><b>Amp.level</b>: {self.amputee_data.amputation_level}")
-        self.amp_side.setText(f"<html><b>Amp.limb</b>: {self.amputee_data.amputated_limb}")
+        self.amp_level.setText(
+            f"<html><b>Amp.level</b>: {self.amputee_data.amputation_level}"
+        )
+        self.amp_side.setText(
+            f"<html><b>Amp.limb</b>: {self.amputee_data.amputated_limb}"
+        )
 
         person_info_layout.addWidget(self.name)
         person_info_layout.addWidget(self.amp_level)
@@ -306,12 +338,14 @@ class MainWindow(QMainWindow):
 
         video_frame = QFrame()
         video_frame.setFrameShape(QFrame.NoFrame)
-        video_frame.setStyleSheet(f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});")  
+        video_frame.setStyleSheet(
+            f"background-color: rgb({rgb_plot_frame[0]}, {rgb_plot_frame[1]}, {rgb_plot_frame[2]});"
+        )
 
         video_frame_layout = QVBoxLayout()
         video_frame_layout.addWidget(person_info_frame)
         video_frame_layout.addWidget(self.video_widget)
-        video_frame_layout.setAlignment(Qt.AlignCenter) 
+        video_frame_layout.setAlignment(Qt.AlignCenter)
         video_frame.setLayout(video_frame_layout)
 
         video_info_frame = QFrame()
@@ -320,7 +354,7 @@ class MainWindow(QMainWindow):
         end_color = QColor(255, 255, 255)
         video_info_frame = GradientFrame(start_color, end_color)
         video_info_frame.setFrameShape(QFrame.StyledPanel)
-    
+
         video_info_layout = QHBoxLayout()
 
         # Create the left_leg_frame
@@ -331,7 +365,7 @@ class MainWindow(QMainWindow):
         self.hip_angle_label = QLabel()
         self.knee_angle_label = QLabel()
         self.ankle_angle_label = QLabel()
-        
+
         self.max_hip = QLabel()
         self.min_hip = QLabel()
         self.max_knee = QLabel()
@@ -366,9 +400,11 @@ class MainWindow(QMainWindow):
         dev_frame.setLayout(dev_frame_layout)
 
         dev_frame_title = QLabel("Gait deviations")
-        dev_frame_title.setStyleSheet("font-weight: bold; font-size: 16px; padding: 5px;")
+        dev_frame_title.setStyleSheet(
+            "font-weight: bold; font-size: 16px; padding: 5px;"
+        )
 
-        self.gait_phases_time = QLabel()    
+        self.gait_phases_time = QLabel()
 
         dev_frame_layout.addWidget(dev_frame_title)
         dev_frame_layout.addWidget(self.gait_phases_time)
@@ -376,35 +412,33 @@ class MainWindow(QMainWindow):
         self.vaulting_dev = QLabel()
         self.vaulting_dev_button = QPushButton("Correction")
         self.vaulting_dev_button.setStyleSheet("background-color: #D2F9D3;")
-        self.vaulting_dev_button.setFixedSize(80, 40)  
-        self.vaulting_dev_button.setVisible(False)  
+        self.vaulting_dev_button.setFixedSize(80, 40)
+        self.vaulting_dev_button.setVisible(False)
 
-        vaulting_layout = QHBoxLayout()    
+        vaulting_layout = QHBoxLayout()
         vaulting_layout.addWidget(self.vaulting_dev)
         vaulting_layout.addWidget(self.vaulting_dev_button)
         dev_frame_layout.addLayout(vaulting_layout)
 
-
-        self.knee_hyp_ext = QLabel()
+        self.socket_align = QLabel()
         self.knee_hyp_ext_button = QPushButton("Correction")
         self.knee_hyp_ext_button.setStyleSheet("background-color: #D2F9D3;")
-        self.knee_hyp_ext_button.setFixedSize(80, 40)  
-        self.knee_hyp_ext_button.setVisible(False)  
-    
-        knee_hyp_ext_layout = QHBoxLayout()    
-        knee_hyp_ext_layout.addWidget(self.knee_hyp_ext)
+        self.knee_hyp_ext_button.setFixedSize(80, 40)
+        self.knee_hyp_ext_button.setVisible(False)
+
+        knee_hyp_ext_layout = QHBoxLayout()
+        knee_hyp_ext_layout.addWidget(self.socket_align)
         knee_hyp_ext_layout.addWidget(self.knee_hyp_ext_button)
         dev_frame_layout.addLayout(knee_hyp_ext_layout)
 
-
-        self.trunk_elev = QLabel()
+        self.foot_flex_dev = QLabel()
         self.trunk_elev_button = QPushButton("Correction")
         self.trunk_elev_button.setStyleSheet("background-color: #D2F9D3;")
-        self.trunk_elev_button.setFixedSize(80, 40)  
-        self.trunk_elev_button.setVisible(False)  
+        self.trunk_elev_button.setFixedSize(80, 40)
+        self.trunk_elev_button.setVisible(False)
 
-        trunk_elev_layout = QHBoxLayout()    
-        trunk_elev_layout.addWidget(self.trunk_elev)
+        trunk_elev_layout = QHBoxLayout()
+        trunk_elev_layout.addWidget(self.foot_flex_dev)
         trunk_elev_layout.addWidget(self.trunk_elev_button)
         dev_frame_layout.addLayout(trunk_elev_layout)
 
@@ -419,24 +453,22 @@ class MainWindow(QMainWindow):
 
         main_layout.addWidget(video_frame)
 
-
-
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.update_angle_values("Hip"))
-        self.timer.start(int(1000/120))
+        self.timer.start(int(1000 / 120))
 
         self.timer2 = QTimer()
         self.timer2.timeout.connect(lambda: self.update_angle_values("Knee"))
-        self.timer2.start(int(1000/120))
+        self.timer2.start(int(1000 / 120))
 
         self.timer3 = QTimer()
         self.timer3.timeout.connect(lambda: self.update_angle_values("Ankle"))
-        self.timer3.start(int(1000/120))
-    
-    def angle_max_min(self, joint:str, y_history):
-        max_y = float('-inf')
-        min_y = float('inf')
-        
+        self.timer3.start(int(1000 / 120))
+
+    def angle_max_min(self, joint: str, y_history):
+        max_y = float("-inf")
+        min_y = float("inf")
+
         if joint == "Hip":
             y_history = y_history
         elif joint == "Knee":
@@ -446,7 +478,7 @@ class MainWindow(QMainWindow):
 
         for y in y_history:
             if y > max_y:
-                max_y = y  
+                max_y = y
             if y < min_y:
                 min_y = y
 
@@ -462,10 +494,11 @@ class MainWindow(QMainWindow):
 
     def gait_phase_line(self, ax, frame):
         if frame is not None:
-            ax.axvline(frame, linestyle='--', linewidth=2)
+            ax.axvline(frame, linestyle="--", linewidth=2)
 
-    def normalize_gait_phases(self, ax, line, list_x, list_y, lower_threshold: int, upper_threshold: int):
-
+    def normalize_gait_phases(
+        self, ax, line, list_x, list_y, lower_threshold: int, upper_threshold: int
+    ):
         original_list_x = list_x
         original_list_y = list_y
         copied_list_x = copy.deepcopy(original_list_x)
@@ -476,99 +509,181 @@ class MainWindow(QMainWindow):
             copied_list_y = copied_list_y[lower_threshold:upper_threshold]
 
             if self.video_widget.init_video.direction == "right_to_left":
-                stance_frame_RTL, swing_frame_RTL = self.video_widget.init_video.gait_phases_RTL()
+                (
+                    stance_frame_RTL,
+                    swing_frame_RTL,
+                ) = self.video_widget.init_video.gait_phases_RTL()
 
-                if len(copied_list_x) > 0: 
+                if len(copied_list_x) > 0:
                     self.min_value_x_RTL = min(copied_list_x)
-                    normalized_values = [x - self.min_value_x_RTL for x in copied_list_x]
+                    normalized_values = [
+                        x - self.min_value_x_RTL for x in copied_list_x
+                    ]
 
                     if stance_frame_RTL is not None:
-                        self.gait_phase_line(ax, stance_frame_RTL - self.min_value_x_RTL + lower_threshold / self.video_widget.init_video.fps_rate)
+                        self.gait_phase_line(
+                            ax,
+                            stance_frame_RTL
+                            - self.min_value_x_RTL
+                            + lower_threshold / self.video_widget.init_video.fps_rate,
+                        )
 
                     if swing_frame_RTL is not None:
-                        self.gait_phase_line(ax, swing_frame_RTL - self.min_value_x_RTL + lower_threshold / self.video_widget.init_video.fps_rate)
+                        self.gait_phase_line(
+                            ax,
+                            swing_frame_RTL
+                            - self.min_value_x_RTL
+                            + lower_threshold / self.video_widget.init_video.fps_rate,
+                        )
 
-                    if self.gait_phase_duration_RTL == False and stance_frame_RTL is not None and swing_frame_RTL is not None:
+                    if (
+                        self.gait_phase_duration_RTL == False
+                        and stance_frame_RTL is not None
+                        and swing_frame_RTL is not None
+                    ):
                         self.time_difference_RTL = swing_frame_RTL - stance_frame_RTL
                         self.gait_phase_duration_RTL = True
 
                     line.set_data(normalized_values, copied_list_y)
             else:
-                stance_frame_LTR, swing_frame_LTR = self.video_widget.init_video.gait_phase_LTR()
+                (
+                    stance_frame_LTR,
+                    swing_frame_LTR,
+                ) = self.video_widget.init_video.gait_phase_LTR()
 
-                if len(copied_list_x) > 0: 
+                if len(copied_list_x) > 0:
                     self.min_value_x_LTR = min(copied_list_x)
-                    normalized_values_x = [x - self.min_value_x_LTR for x in copied_list_x]
+                    normalized_values_x = [
+                        x - self.min_value_x_LTR for x in copied_list_x
+                    ]
 
                     if stance_frame_LTR is not None:
-                        self.gait_phase_line(ax, stance_frame_LTR - self.min_value_x_LTR + lower_threshold / self.video_widget.init_video.fps_rate)
+                        self.gait_phase_line(
+                            ax,
+                            stance_frame_LTR
+                            - self.min_value_x_LTR
+                            + lower_threshold / self.video_widget.init_video.fps_rate,
+                        )
 
                     if swing_frame_LTR is not None:
-                        self.gait_phase_line(ax, swing_frame_LTR - self.min_value_x_LTR + lower_threshold / self.video_widget.init_video.fps_rate)
+                        self.gait_phase_line(
+                            ax,
+                            swing_frame_LTR
+                            - self.min_value_x_LTR
+                            + lower_threshold / self.video_widget.init_video.fps_rate,
+                        )
 
-                    if self.gait_phase_duration_LTR == False and stance_frame_LTR is not None and swing_frame_LTR is not None:
+                    if (
+                        self.gait_phase_duration_LTR == False
+                        and stance_frame_LTR is not None
+                        and swing_frame_LTR is not None
+                    ):
                         self.time_difference_LTR = swing_frame_LTR - stance_frame_LTR
                         self.gait_phase_duration_LTR = True
 
                     line.set_data(normalized_values_x, copied_list_y)
 
-
     def gait_duration(self):
         if self.time_difference_RTL is None or self.time_difference_LTR is None:
             self.gait_phases_time.setText(f"Analyzing gait deviations...")
-        
-        if self.time_difference_RTL is not None and self.time_difference_LTR is not None:
-            time_difference_difference = self.time_difference_RTL - self.time_difference_LTR
-            #self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
+
+        if (
+            self.time_difference_RTL is not None
+            and self.time_difference_LTR is not None
+        ):
+            time_difference_difference = (
+                self.time_difference_RTL - self.time_difference_LTR
+            )
+            # self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
 
             if self.time_difference_RTL > self.time_difference_LTR:
-                self.percent_diff = (self.time_difference_RTL - self.time_difference_LTR) / self.time_difference_RTL * 100
+                self.percent_diff = (
+                    (self.time_difference_RTL - self.time_difference_LTR)
+                    / self.time_difference_RTL
+                    * 100
+                )
                 self.vaulting_dev.setText(f"Vaulting")
-                self.knee_hyp_ext.setText(f"Knee hyperextension")
-                self.trunk_elev.setText(f"Trunk elevation deviation")
+                self.socket_align.setText(f"Alinhamento do encaixe")
+                self.foot_flex_dev.setText(f"Flexão do pé")
 
                 if self.percent_diff > 1:
-                    self.vaulting_dev.setStyleSheet("color: red;")
-                    self.vaulting_dev_button.setVisible(True)  
-                    self.vaulting_dev_button.clicked.connect(lambda: self.correction_window(f"Stance phase diff: {time_difference_difference: .2f} seconds\nThe left leg had a {self.percent_diff:.2f}% stance phase longer \nCorreção 1\nCorreção 2\nCorreção 3"))
-                   
-                    self.knee_hyp_ext.setStyleSheet("color: green;")
-                    self.knee_hyp_ext_button.setVisible(True)  
-                    self.knee_hyp_ext_button.clicked.connect(lambda: self.correction_window("Knee hyperextension\nCorreção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+                    self.vaulting_dev.setStyleSheet("color: green;")
+                    self.vaulting_dev_button.setVisible(True)
+                    self.vaulting_dev_button.clicked.connect(
+                        lambda: self.correction_window(
+                            f"A diferença na fase de apoio foi de {time_difference_difference: .2f} segundos\
+                                                                                            \n\nA perna esquerda teve uma fase de apoio {self.percent_diff:.2f}% mais longa.\
+                                                                                              \n\nCertifique-se que o comprimento da prótese não está demasiado comprido\
+                                                                                              \n\nVerifique a tensão do joelho para garantir que o este consegue fletir e extender \na um ritmo que acompanha o movimento do pé"
+                        )
+                    )
 
-                    self.trunk_elev.setStyleSheet("color: green;")
-                    self.trunk_elev_button.setVisible(True)  
-                    self.trunk_elev_button.clicked.connect(lambda: self.correction_window("Correção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+                    self.socket_align.setStyleSheet("color: green;")
+                    self.knee_hyp_ext_button.setVisible(True)
+                    self.knee_hyp_ext_button.clicked.connect(
+                        lambda: self.correction_window(
+                            "Alinhamento do encaixe\
+                                                                                            \n\nVerifique que o centro do encaixe está alinhado com o mesmo ponto, na vertical, na posição a 1/3 do pé"
+                        )
+                    )
 
+                    self.foot_flex_dev.setStyleSheet("color: green;")
+                    self.trunk_elev_button.setVisible(True)
+                    self.trunk_elev_button.clicked.connect(
+                        lambda: self.correction_window(
+                            "O pé esquerdo teve menos 5.2 graus de dorsiflexão e menos 4 graus de flexão plantar\
+                                                                                          \n\nGaranta que a tensão do mecanismo que ajusta a velocidade de flexão do pé está adequada para garantir que o pé consegue ser utilizador corretamente, em toda a sua amplitude articular, se necessário"
+                        )
+                    )
 
             elif self.time_difference_RTL < self.time_difference_LTR:
-                self.percent_diff = (self.time_difference_LTR - self.time_difference_RTL) / self.time_difference_LTR * 100
+                self.percent_diff = (
+                    (self.time_difference_LTR - self.time_difference_RTL)
+                    / self.time_difference_LTR
+                    * 100
+                )
                 self.vaulting_dev.setText(f"Vaulting")
-                self.knee_hyp_ext.setText(f"Knee hyperextension")
-                self.trunk_elev.setText(f"Trunk elevation deviation")
+                self.socket_align.setText(f"Alinhamento do encaixe")
+                self.foot_flex_dev.setText(f"Flexão do pé")
 
                 if self.percent_diff > 1:
-                    self.vaulting_dev.setStyleSheet("color: red;")
-                    self.vaulting_dev_button.setVisible(True)  
-                    self.vaulting_dev_button.clicked.connect(lambda: self.correction_window(f"Stance phase diff: {time_difference_difference: .2f} seconds\nThe left leg had a {self.percent_diff:.2f}% stance phase longer \nCorreção 1\nCorreção 2\nCorreção 3"))
-                    
-                    self.knee_hyp_ext.setStyleSheet("color: green;")
-                    self.knee_hyp_ext_button.setVisible(True)  
-                    self.knee_hyp_ext_button.clicked.connect(lambda: self.correction_window("Knee hyperextension\nCorreção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+                    self.vaulting_dev.setStyleSheet("color: green;")
+                    self.vaulting_dev_button.setVisible(True)
+                    self.vaulting_dev_button.clicked.connect(
+                        lambda: self.correction_window(
+                            f"A diferença na fase de apoio foi de {time_difference_difference: .2f} segundos\
+                                                                                            \n\nA perna esquerda teve uma fase de apoio {self.percent_diff:.2f}% mais longa.\
+                                                                                              \n\nCertifique-se que o comprimento da prótese não está demasiado comprido\
+                                                                                                \n\nVerifique a tensão do joelho para garantir que o este consegue fletir e extender \na um ritmo que acompanha o movimento do pé"
+                        )
+                    )
 
-                    self.trunk_elev.setStyleSheet("color: green;")
-                    self.trunk_elev_button.setVisible(True)  
-                    self.trunk_elev_button.clicked.connect(lambda: self.correction_window("Correção 1\nCorreção 2\nCorreção 3\nCorreção 4"))
+                    self.socket_align.setStyleSheet("color: green;")
+                    self.knee_hyp_ext_button.setVisible(True)
+                    self.knee_hyp_ext_button.clicked.connect(
+                        lambda: self.correction_window(
+                            "Alinhamento do encaixe\
+                                                                                            \n\nVerifique que o centro do encaixe está alinhado com o mesmo ponto, na vertical, na posição a 1/3 do pé"
+                        )
+                    )
+
+                    self.foot_flex_dev.setStyleSheet("color: green;")
+                    self.trunk_elev_button.setVisible(True)
+                    self.trunk_elev_button.clicked.connect(
+                        lambda: self.correction_window(
+                            "O pé esquerdo teve menos 5.2 graus de dorsiflexão e menos 4 graus de flexão plantar\
+                                                                                          \n\nGaranta que a tensão do mecanismo que ajusta a velocidade de flexão do pé está adequada para garantir que o pé consegue ser utilizador corretamente, em toda a sua amplitude articular, se necessário"
+                        )
+                    )
 
             else:
                 self.vaulting_dev.setText(f"Same stance phase in both legs")
-                self.vaulting_dev_button.setVisible(False)  
+                self.vaulting_dev_button.setVisible(False)
 
-
-    def update_angle_values(self, angle:str):
+    def update_angle_values(self, angle: str):
         lower_threshold = 5
         upper_threshold = -5
-        #? x = current_frame / fps (fps in this case is 120)
+        # ? x = current_frame / fps (fps in this case is 120)
         x = self.video_widget.current_frame / self.video_widget.init_video.fps_rate
         self.gait_duration()
 
@@ -576,11 +691,18 @@ class MainWindow(QMainWindow):
             y = self.video_widget.angle_value("Hip")
             if self.video_widget.init_video.direction == "right_to_left":
                 self.x_history.append(x)
-                self.y_history.append(y)   
+                self.y_history.append(y)
 
-                self.normalize_gait_phases(self.ax, self.line, self.x_history, self.y_history, lower_threshold, upper_threshold)
-                
-                self.line.set_color('red')
+                self.normalize_gait_phases(
+                    self.ax,
+                    self.line,
+                    self.x_history,
+                    self.y_history,
+                    lower_threshold,
+                    upper_threshold,
+                )
+
+                self.line.set_color("red")
                 self.line.set_linewidth(2)
                 self.ax.relim()
                 self.ax.autoscale_view()
@@ -589,14 +711,20 @@ class MainWindow(QMainWindow):
                 self.angle_max_min("Hip", self.y_history)
 
             else:
-
                 self.x_history_2.append(x)
                 self.y_history_2.append(y)
 
-                self.normalize_gait_phases(self.ax_2, self.line_2, self.x_history_2, self.y_history_2, lower_threshold, upper_threshold)
+                self.normalize_gait_phases(
+                    self.ax_2,
+                    self.line_2,
+                    self.x_history_2,
+                    self.y_history_2,
+                    lower_threshold,
+                    upper_threshold,
+                )
 
-                self.line_2.set_color('red')
-                self.line_2.set_linewidth(2)    
+                self.line_2.set_color("red")
+                self.line_2.set_linewidth(2)
                 self.ax_2.relim()
                 self.ax_2.autoscale_view()
                 self.ax_2.set_ylim([-20, 30])
@@ -608,29 +736,43 @@ class MainWindow(QMainWindow):
         elif angle == "Knee":
             y = self.video_widget.angle_value("Knee")
             if self.video_widget.init_video.direction == "right_to_left":
-                self.x_history2.append(x)  
-                self.y_history2.append(y)  
+                self.x_history2.append(x)
+                self.y_history2.append(y)
 
-                self.normalize_gait_phases(self.ax2, self.line2, self.x_history2, self.y_history2, lower_threshold, upper_threshold)
+                self.normalize_gait_phases(
+                    self.ax2,
+                    self.line2,
+                    self.x_history2,
+                    self.y_history2,
+                    lower_threshold,
+                    upper_threshold,
+                )
 
-                self.line2.set_color('blue')
+                self.line2.set_color("blue")
                 self.line2.set_linewidth(2)
-                self.ax2.relim() 
-                self.ax2.autoscale_view()  
+                self.ax2.relim()
+                self.ax2.autoscale_view()
                 self.ax2.set_ylim([-5, 70])
                 self.canvas.draw()
                 self.angle_max_min("Knee", self.y_history2)
 
             else:
-                self.x_history2_2.append(x)  
-                self.y_history2_2.append(y)  
+                self.x_history2_2.append(x)
+                self.y_history2_2.append(y)
 
-                self.normalize_gait_phases(self.ax2_2, self.line2_2, self.x_history2_2, self.y_history2_2, lower_threshold, upper_threshold)
-                
-                self.line2_2.set_color('blue')
+                self.normalize_gait_phases(
+                    self.ax2_2,
+                    self.line2_2,
+                    self.x_history2_2,
+                    self.y_history2_2,
+                    lower_threshold,
+                    upper_threshold,
+                )
+
+                self.line2_2.set_color("blue")
                 self.line2_2.set_linewidth(2)
-                self.ax2_2.relim() 
-                self.ax2_2.autoscale_view()  
+                self.ax2_2.relim()
+                self.ax2_2.autoscale_view()
                 self.ax2_2.set_ylim([-5, 70])
                 self.canvas_2.draw()
                 self.angle_max_min("Knee", self.y_history2_2)
@@ -640,28 +782,42 @@ class MainWindow(QMainWindow):
         elif angle == "Ankle":
             y = self.video_widget.angle_value("Ankle")
             if self.video_widget.init_video.direction == "right_to_left":
-                self.x_history3.append(x)  
-                self.y_history3.append(y)  
-                
-                self.normalize_gait_phases(self.ax3, self.line3, self.x_history3, self.y_history3, lower_threshold, upper_threshold)
+                self.x_history3.append(x)
+                self.y_history3.append(y)
 
-                self.line3.set_color('black')
+                self.normalize_gait_phases(
+                    self.ax3,
+                    self.line3,
+                    self.x_history3,
+                    self.y_history3,
+                    lower_threshold,
+                    upper_threshold,
+                )
+
+                self.line3.set_color("black")
                 self.line3.set_linewidth(2)
-                self.ax3.relim() 
-                self.ax3.autoscale_view()  
+                self.ax3.relim()
+                self.ax3.autoscale_view()
                 self.ax3.set_ylim([-20, 25])
                 self.canvas.draw()
                 self.angle_max_min("Ankle", self.y_history3)
             else:
-                self.x_history3_2.append(x)  
-                self.y_history3_2.append(y)  
+                self.x_history3_2.append(x)
+                self.y_history3_2.append(y)
 
-                self.normalize_gait_phases(self.ax3_2, self.line3_2, self.x_history3_2, self.y_history3_2, lower_threshold, upper_threshold)
-                
-                self.line3_2.set_color('black')
+                self.normalize_gait_phases(
+                    self.ax3_2,
+                    self.line3_2,
+                    self.x_history3_2,
+                    self.y_history3_2,
+                    lower_threshold,
+                    upper_threshold,
+                )
+
+                self.line3_2.set_color("black")
                 self.line3_2.set_linewidth(2)
-                self.ax3_2.relim() 
-                self.ax3_2.autoscale_view()  
+                self.ax3_2.relim()
+                self.ax3_2.autoscale_view()
                 self.ax3_2.set_ylim([-20, 25])
                 self.canvas_2.draw()
                 self.angle_max_min("Ankle", self.y_history3_2)
@@ -678,8 +834,11 @@ class MainWindow(QMainWindow):
         self.video_widget.toggle_show_bbox(not checked)
 
     def open_save_dialog(self):
-
-        results_pdf = PdfGen(self.amputee_data.name, self.amputee_data.amputation_level, self.amputee_data.amputated_limb)
+        results_pdf = PdfGen(
+            self.amputee_data.name,
+            self.amputee_data.amputation_level,
+            self.amputee_data.amputated_limb,
+        )
         dialog = QDialog()
         dialog.setWindowTitle("Comments")
 
@@ -691,16 +850,18 @@ class MainWindow(QMainWindow):
         layout.addWidget(text_edit)
 
         save_pdf_button = QPushButton("Save PDF")
-        save_pdf_button.clicked.connect(lambda: results_pdf.save_as_pdf(text_edit.toPlainText(), dialog))
+        save_pdf_button.clicked.connect(
+            lambda: results_pdf.save_as_pdf(text_edit.toPlainText(), dialog)
+        )
         layout.addWidget(save_pdf_button)
 
         dialog.setLayout(layout)
         dialog.exec_()
 
-
     def correction_window(self, label_text):
         info_window = InfoWindow(label_text)
         info_window.exec_()
+
 
 class InfoWindow(QDialog):
     def __init__(self, label_text):
@@ -711,14 +872,13 @@ class InfoWindow(QDialog):
 
         layout = QVBoxLayout()
 
-        info_label = QLabel(f"These are the corrections: \n{label_text}.")
+        info_label = QLabel(f"Correções: \n\n{label_text}.")
         layout.addWidget(info_label)
 
         self.setLayout(layout)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     sys.exit(app.exec_())
