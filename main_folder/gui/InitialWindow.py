@@ -16,11 +16,8 @@ class InitialWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.initUI()
-
-    def initUI(self):
         self.setWindowTitle("Amputee Analyzer")
-        self.setFixedSize(300, 200)
+        self.setFixedSize(300, 100)
 
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
@@ -46,7 +43,7 @@ class InitialWindow(QMainWindow):
 
     def access_patients(self):
         dialog = ListOfPatients()
-        dialog.exec()
+        dialog.exec_()
 
 
 def main():

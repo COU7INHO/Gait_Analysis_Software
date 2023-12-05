@@ -1,10 +1,13 @@
 import psycopg2
+from conn_to_db import connect_to_database
 from PatientDetails import PatientDetails
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -17,7 +20,9 @@ class ListOfPatients(QDialog):
         super().__init__()
 
         self.setWindowTitle("Patient Information")
-        self.setFixedSize(700, 600)
+        self.setFixedSize(600, 600)
+
+        self.conn, self.cur = connect_to_database()
 
         layout = QVBoxLayout()
 
@@ -48,17 +53,6 @@ class ListOfPatients(QDialog):
         self.display_data()
         self.setLayout(layout)
 
-    def connect_to_database(self):
-        try:
-            self.conn = psycopg2.connect(
-                dbname="postgres",
-                user="postgres",
-                password="admin",
-            )
-            self.cur = self.conn.cursor()
-        except psycopg2.Error as e:
-            print("Error connecting to database:", e)
-
     def filter_patient(self):
         name_filter = self.name_filter.text()
         district_filter = self.district_filter.text()
@@ -74,8 +68,6 @@ class ListOfPatients(QDialog):
             print("Error executing SQL query:", e)
 
     def display_data(self):
-        self.connect_to_database()
-
         query = "SELECT name, amputation_level, district FROM patient ORDER BY name;"
 
         self.cur.execute(query)
@@ -93,17 +85,24 @@ class ListOfPatients(QDialog):
         for i, row in enumerate(rows):
             for j, value in enumerate(row):
                 item = QTableWidgetItem(str(value))
+                item.setFlags(
+                    item.flags() ^ Qt.ItemIsEditable
+                )  # Make the item non-editable
                 self.tableWidget.setItem(i, j, item)
+
+            self.tableWidget.setColumnWidth(len(headers) - 1, 100)
+            self.tableWidget.setColumnWidth(0, 200)
 
             btn = QPushButton("Details", self)
             btn.clicked.connect(lambda _, index=i: self.show_details_window(index))
             self.tableWidget.setCellWidget(
                 i, len(headers) - 1, btn
             )  # Set button in the last column
+            btn.setFocusPolicy(Qt.NoFocus)
 
-            self.tableWidget.setColumnWidth(len(headers) - 1, 100)
-
-            self.tableWidget.setColumnWidth(0, 200)
+    def update_after_delete(self):
+        self.tableWidget.clearContents()
+        self.display_data()
 
     def update_table_widget(self, rows):
         self.tableWidget.setRowCount(len(rows))
@@ -121,5 +120,27 @@ class ListOfPatients(QDialog):
     def show_details_window(self, index):
         name = self.tableWidget.item(index, 0).text()
 
-        details_window = PatientDetails(name)
-        details_window.exec_()
+        try:
+            self.cur.execute(
+                "SELECT age, amputation_level, amputated_limb, phone, address, zip_code, district FROM patient WHERE name = %s;",
+                (name,),
+            )
+            patient_details = self.cur.fetchone()
+
+            details_dict = {
+                "name": name,
+                "age": patient_details[0] if patient_details else "N/A",
+                "amputation_level": patient_details[1] if patient_details else "N/A",
+                "amputated_limb": patient_details[2] if patient_details else "N/A",
+                "phone_number": patient_details[3] if patient_details else "N/A",
+                "address": patient_details[4] if patient_details else "N/A",
+                "zip_code": patient_details[5] if patient_details else "N/A",
+                "district": patient_details[6] if patient_details else "N/A",
+            }
+
+            details_window = PatientDetails(details_dict)
+            details_window.exec_()
+
+        except psycopg2.Error as e:
+            QMessageBox.critical("Error fetching additional data:", e)
+        self.update_after_delete()
