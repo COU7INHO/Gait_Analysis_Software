@@ -79,7 +79,7 @@ class ListOfPatients(QDialog):
             len(self.cur.description) + 1
         )  # +1 for button column
         headers = [desc[0] for desc in self.cur.description]
-        headers.append("Details")  # Add header for the button column
+        headers.append("Details")
         self.tableWidget.setHorizontalHeaderLabels(headers)
 
         for i, row in enumerate(rows):
@@ -122,7 +122,7 @@ class ListOfPatients(QDialog):
 
         try:
             self.cur.execute(
-                "SELECT age, amputation_level, amputated_limb, phone, address, zip_code, district FROM patient WHERE name = %s;",
+                "SELECT age, amputation_level, amputated_limb, phone, address, zip_code, district, id FROM patient WHERE name = %s;",
                 (name,),
             )
             patient_details = self.cur.fetchone()
@@ -136,6 +136,7 @@ class ListOfPatients(QDialog):
                 "address": patient_details[4] if patient_details else "N/A",
                 "zip_code": patient_details[5] if patient_details else "N/A",
                 "district": patient_details[6] if patient_details else "N/A",
+                "id": patient_details[7] if patient_details else "N/A",
             }
 
             details_window = PatientDetails(details_dict)

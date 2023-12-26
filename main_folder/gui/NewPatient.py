@@ -50,7 +50,7 @@ class NewPatient(QDialog):
 
         district_label = QLabel("District:")
         self.district_edit = QComboBox()
-        portugal_districts = [
+        self.portugal_districts = [
             "Aveiro",
             "Beja",
             "Braga",
@@ -73,7 +73,7 @@ class NewPatient(QDialog):
             "Madeira",
         ]
 
-        for district in sorted(portugal_districts):
+        for district in sorted(self.portugal_districts):
             self.district_edit.addItem(district)
 
         self.add_patient_button = QPushButton("Add patient")
