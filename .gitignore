@@ -160,3 +160,4 @@ cython_debug/
 *.weights
 /ML_Tracking/sort/
 /gpt files/
+/other_app/
