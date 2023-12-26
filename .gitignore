@@ -160,7 +160,7 @@ cython_debug/
 /GetDimensions/
 /gpt files/
 /ML_Tracking/
-/other_app/
 /Single_Camera_Calibration/
 /vision_calibration/
+other_app/
 requirements.txt
