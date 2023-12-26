@@ -153,11 +153,14 @@ cython_debug/
 
 .vscode
 .DS_Store
-/vision_calibration/images_to_calibrate
-/Single_Camera_Calibration/CalibrationImages
 *.xml
 *.cfg
 *.weights
-/ML_Tracking/sort/
+/camera_pose_estimation/
+/GetDimensions/
 /gpt files/
+/ML_Tracking/
 /other_app/
+/Single_Camera_Calibration/
+/vision_calibration/
+requirements.txt
