@@ -4,7 +4,6 @@ import sys
 import cv2
 from backend.backend import MotionAnalysis
 from backend.pdf_report import PdfGen
-from gui.init_info_gui import AmputeeDataInput
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtCore import Qt, QTimer
@@ -117,13 +116,17 @@ class GradientFrame(QFrame):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, patient_info):
         super(MainWindow, self).__init__()
 
+        self.patient_info = patient_info
+
+        """
         # GUI to input amputee data
         self.amputee_data = AmputeeDataInput()
         self.amputee_data.submit_signal.connect(self.on_submit)
         self.amputee_data.show()
+        """
 
         # Hip angle
         self.x_history = []
@@ -322,13 +325,12 @@ class MainWindow(QMainWindow):
         self.name = QLabel()
         self.amp_level = QLabel()
         self.amp_side = QLabel()
-        self.name.setText(f"<html><b>Name:</b> {self.amputee_data.name}")
-        self.amp_level.setText(
-            f"<html><b>Amp.level</b>: {self.amputee_data.amputation_level}"
-        )
-        self.amp_side.setText(
-            f"<html><b>Amp.limb</b>: {self.amputee_data.amputated_limb}"
-        )
+        self.name.setText(f"<html><b>Name:</b> {self.patient_info[0]}")
+        # self.name.setText(f"<html><b>Name:</b> {self.amputee_data.name}")
+        self.amp_level.setText(f"<html><b>Amp.level</b>: {self.patient_info[1]}")
+        # self.amp_level.setText(f"<html><b>Amp.level</b>: {self.amputee_data.amputation_level}" )
+        self.amp_side.setText(f"<html><b>Amp.limb</b>: {self.patient_info[2]}")
+        # self.amp_side.setText( f"<html><b>Amp.limb</b>: {self.amputee_data.amputated_limb}")
 
         person_info_layout.addWidget(self.name)
         person_info_layout.addWidget(self.amp_level)

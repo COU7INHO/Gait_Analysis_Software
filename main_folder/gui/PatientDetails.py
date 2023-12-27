@@ -1,14 +1,7 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import psycopg2
-from conn_to_db import connect_to_database
-from EditPatient import EditPatientInfo
-
-# from EditPatient import EditPatientInfo
-from main2 import MainWindow
+from analysis_gui import MainWindow
+from gui.conn_to_db import connect_to_database
+from gui.EditPatient import EditPatientInfo
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout
 

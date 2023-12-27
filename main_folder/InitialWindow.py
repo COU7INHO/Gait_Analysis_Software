@@ -1,7 +1,7 @@
 import sys
 
-from ListOfPatients import ListOfPatients
-from NewPatient import NewPatient
+from gui.ListOfPatients import ListOfPatients
+from gui.NewPatient import NewPatient
 from PyQt5.QtWidgets import (
     QApplication,
     QHBoxLayout,

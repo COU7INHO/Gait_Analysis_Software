@@ -1,6 +1,6 @@
 import psycopg2
-from conn_to_db import connect_to_database
-from PatientDetails import PatientDetails
+from gui.conn_to_db import connect_to_database
+from gui.PatientDetails import PatientDetails
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QDialog,
