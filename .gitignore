@@ -162,5 +162,3 @@ cython_debug/
 /ML_Tracking/
 /Single_Camera_Calibration/
 /vision_calibration/
-other_app/
-requirements.txt

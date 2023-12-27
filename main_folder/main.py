@@ -16,7 +16,7 @@ class InitialWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Amputee Analyzer")
+        self.setWindowTitle("Welcome - Gait analysis")
         self.setFixedSize(300, 100)
 
         central_widget = QWidget(self)

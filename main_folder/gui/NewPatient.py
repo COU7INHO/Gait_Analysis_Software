@@ -1,4 +1,4 @@
-import psycopg2
+from gui.conn_to_db import connect_to_database
 from PyQt5.QtWidgets import (
     QComboBox,
     QDialog,
@@ -15,6 +15,7 @@ class NewPatient(QDialog):
     def __init__(self):
         super().__init__()
 
+        self.conn, self.cursor = connect_to_database()
         self.initUI()
 
     def initUI(self):
@@ -101,12 +102,6 @@ class NewPatient(QDialog):
 
     def info_to_db(self):
         try:
-            conn = psycopg2.connect(
-                dbname="postgres", user="postgres", password="admin"
-            )
-
-            cursor = conn.cursor()
-
             insert_query = "INSERT INTO patient \
                             (name, age, amputation_level, amputated_limb, phone, address, zip_code, district) \
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -122,10 +117,10 @@ class NewPatient(QDialog):
                 self.district_edit.currentText(),
             )
 
-            cursor.execute(insert_query, data_to_insert)
-            conn.commit()
-            cursor.close()
-            conn.close()
+            self.cursor.execute(insert_query, data_to_insert)
+            self.conn.commit()
+            self.cursor.close()
+            self.conn.close()
             QMessageBox.information(self, "Success", "Person added to the database!")
             self.accept()
         except Exception:
