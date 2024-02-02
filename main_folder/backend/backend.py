@@ -1,3 +1,110 @@
+"""
+    MotionAnalysis class for analyzing motion data from video frames.
+
+    Attributes:
+        cameraID (int): The ID of the camera.
+        window_name (str): The name of the window to display video frames.
+        n_markers (int): The number of markers used for motion analysis.
+        names (list): List of marker names.
+        first_ankle_angle (list): List to store the first ankle angle.
+        angle_stored (bool): Flag indicating whether ankle angles are stored.
+        hip_angles (list): List to store hip angles.
+        knee_angles (list): List to store knee angles.
+        ankle_angles (list): List to store ankle angles.
+        counting (int): Counter for frames processed.
+        counting_LTR (int): Counter for frames processed in left-to-right direction.
+        init_angle_ang (float): Initial ankle angle.
+        filtered_ankle_angles (list): List to store filtered ankle angles.
+        direction (str): Motion direction ("left_to_right" or "right_to_left").
+        showLines (bool): Flag to display motion lines on frames.
+        showLabels (bool): Flag to display marker labels on frames.
+        showbbox (bool): Flag to display bounding boxes around markers.
+        start_point_horizontal (tuple): Start point for horizontal calibration line.
+        end_point_horizontal (tuple): End point for horizontal calibration line.
+        clicked_horizontal (bool): Flag indicating if mouse was clicked for horizontal line.
+        draw_horizontal_line (bool): Flag to draw horizontal calibration line.
+        start_point_vertical (tuple): Start point for vertical calibration line.
+        end_point_vertical (tuple): End point for vertical calibration line.
+        clicked_vertical (bool): Flag indicating if mouse was clicked for vertical line.
+        draw_vertical_line (bool): Flag to draw vertical calibration line.
+        new_frame (numpy.ndarray): Copy of the latest video frame.
+        pixel_to_cm_horizontal (float): Conversion factor from pixels to centimeters (horizontal).
+        pixel_to_cm_vertical (float): Conversion factor from pixels to centimeters (vertical).
+        min_y_vm_list (list): List to store minimum Y values for the VM marker.
+        vm_y_value (list): List to store Y values for the VM marker.
+        init_stance_phase (bool): Flag indicating initiation of stance phase.
+        init_swing_phase (bool): Flag indicating initiation of swing phase.
+        stance_frame (float): Frame number when stance phase starts.
+        swing_frame (float): Frame number when swing phase starts.
+        vm_y_value_LTR (list): List to store Y values for the VM marker in left-to-right motion.
+        init_stance_phase_LTR (bool): Flag indicating initiation of stance phase in left-to-right motion.
+        init_swing_phase_LTR (bool): Flag indicating initiation of swing phase in left-to-right motion.
+        stance_frame_LTR (float): Frame number when stance phase starts in left-to-right motion.
+        swing_frame_LTR (float): Frame number when swing phase starts in left-to-right motion.
+        fps_rate (int): Frames per second rate.
+
+    Methods:
+        __init__(self, cameraID, window_name, n_markers=5):
+            Initializes the MotionAnalysis object.
+
+        draw_line_on_frame(self, frame, start_point, end_point, line_length, display=True):
+            Draws a line on the frame with a specified length.
+
+        handle_mouse_event(self, event, x, y, flags, param):
+            Handles mouse events for setting calibration lines.
+
+        open_camera(self):
+            Opens the camera for video capture.
+
+        init_time(self):
+            Initializes the loop time for frame processing.
+
+        get_video_frame(self):
+            Retrieves and processes the next video frame.
+
+        init_tracker(self):
+            Initializes the multi-tracker for marker detection.
+
+        remove_empty_boxes(self):
+            Removes empty bounding boxes.
+
+        check_markers(self):
+            Checks if the correct number of markers is detected.
+
+        markers_centers(self):
+            Retrieves centers of detected markers.
+
+        gait_direction(self):
+            Determines the motion direction based on optical flow.
+
+        get_raw_angles(self, joint1, joint2, joint3):
+            Calculates raw angles between three points.
+
+        get_filtered_angles(self):
+            Calculates filtered angles for hip, knee, and ankle.
+
+        gait_phases_RTL(self):
+            Determines stance and swing phases in right-to-left motion.
+
+        gait_phase_LTR(self):
+            Determines stance and swing phases in left-to-right motion.
+
+        lines(self):
+            Draws motion lines on the frame.
+
+        labels(self):
+            Draws marker labels on the frame.
+
+        end_time(self):
+            Calculates and displays the frame processing time.
+
+        display_window(self):
+            Displays the video frame in the window.
+
+        close_window(self):
+            Closes the video window and releases resources.
+    """
+
 import math
 from time import time
 

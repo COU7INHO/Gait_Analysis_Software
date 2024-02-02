@@ -1,3 +1,30 @@
+"""
+MarkerDetection Class
+
+This class defines a MarkerDetection object for detecting markers in a given frame using YOLO v3 (You Only Look Once) object detection.
+
+Dependencies:
+- cv2: OpenCV library for computer vision.
+
+Attributes:
+- detectFrame: The input frame to be processed for marker detection.
+- confidenceValue: Confidence threshold for considering detected markers (default is 0.6).
+- weightsFile: Path to the YOLO weights file.
+- cfgFile: Path to the YOLO configuration file.
+- net: YOLO neural network model.
+- blob: Blob representation of the input frame.
+
+Methods:
+- __init__: Initializes the MarkerDetection object with input parameters.
+- detect: Performs marker detection on the provided frame using YOLO.
+
+Usage:
+- Create an instance of the MarkerDetection class with the input frame and optional parameters.
+- Call the detect() method to perform marker detection and obtain the results.
+
+Note: Ensure that the YOLO weights file and configuration file paths are correctly specified.
+"""
+
 import cv2
 import numpy as np
 
@@ -10,12 +37,29 @@ class MarkerDetection:
         weightsFile="/Users/tiagocoutinho/Desktop/Gait_Software/main_folder/yolov3_training_last.weights",
         cfgFile="/Users/tiagocoutinho/Desktop/Gait_Software/main_folder/yolov3_testing.cfg",
     ):
+        """
+        Initialize the MarkerDetection object.
+
+        Parameters:
+        - detectFrame: Input frame for marker detection.
+        - confidenceValue: Confidence threshold for marker detection (default is 0.6).
+        - weightsFile: Path to the YOLO weights file.
+        - cfgFile: Path to the YOLO configuration file.
+        """
         self.detectFrame = detectFrame
         self.confidenceValue = confidenceValue
         self.net = cv2.dnn.readNet(weightsFile, cfgFile)
         self.blob = None
 
     def detect(self):
+        """
+        Perform marker detection on the input frame using YOLO.
+
+        Returns:
+        - detectFrame: Processed frame with detected markers.
+        - boxes: List of bounding boxes for detected markers.
+        - indexes: Indexes of selected bounding boxes after non-maximum suppression.
+        """
         layer_names = self.net.getLayerNames()
         output_layers = [layer_names[i - 1] for i in self.net.getUnconnectedOutLayers()]
 

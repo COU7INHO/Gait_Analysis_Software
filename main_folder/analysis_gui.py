@@ -1,3 +1,74 @@
+"""
+Gait Analysis GUI Application
+
+This script implements a graphical user interface (GUI) application for the analysis of gait data captured from video footage. The application is built using PyQt for the GUI components and Matplotlib for real-time plotting.
+
+Main Components:
+----------------
+
+1. `MainWindow` Class:
+   - The central class representing the main application window.
+
+2. Plotting Frames:
+   - Left and right leg angle plots are created using QFrame, Figure, and Canvas components.
+
+3. Patient Information Display:
+   - Patient details, including name, amputation level, and amputated limb, are shown.
+
+4. `angle_max_min` Method:
+   - Calculates and displays the maximum and minimum angles for hip, knee, and ankle joints.
+
+5. Gait Phases Visualization:
+   - `gait_phase_line` method adds vertical lines indicating gait phases.
+   - `normalize_gait_phases` method normalizes gait data and updates the plot accordingly.
+
+6. `gait_duration` Method:
+   - Calculates and displays the difference in stance phase duration between legs.
+   - Identifies gait deviations and suggests corrective actions.
+
+7. Real-time Angle Updates:
+   - `update_angle_values` method continuously updates hip, knee, and ankle angles.
+
+8. User Actions:
+   - Actions triggered by user interaction, such as toggling display options and saving reports.
+
+9. `open_save_dialog` Method:
+   - Opens a dialog for saving a PDF report with user comments.
+
+10. `correction_window` Method:
+    - Displays a window with details on necessary corrections.
+
+11. `InfoWindow` Class:
+    - A custom QDialog for displaying information and corrections.
+
+Implemented Features:
+---------------------
+
+- Deviation Calculation and Solutions:
+  - Gait deviations are accurately calculated.
+  - The application suggests corrective actions for each identified deviation.
+
+- PDF Report Generation:
+  - Users can save gait analysis information, including comments, in a PDF report.
+
+To-Be-Implemented Features (examples):
+---------------------------
+
+- Frontal Plane Analysis:
+  - Implement the capability to analyze gait data in the frontal plane.
+
+- Settings Window:
+  - Create a settings window to adjust parameters such as FPS rate and calibration object dimensions.
+
+Usage:
+------
+1. Ensure PyQt and Matplotlib are installed.
+2. Run the script to launch the GUI.
+3. Load video data, analyze gait angles, and receive insights into gait deviations.
+
+Note: For detailed information on individual methods and functionalities, refer to the respective function and class docstrings in the code.
+"""
+
 import copy
 import sys
 
@@ -25,6 +96,24 @@ from PyQt5.QtWidgets import (
 
 
 class VideoData(QLabel):
+    """
+    VideoData class handles video processing and visualization for gait analysis.
+
+    Attributes:
+        - window_name (str): The name of the GUI window.
+        - init_video (MotionAnalysis): Instance of MotionAnalysis for video analysis.
+        - timer (QTimer): Timer to trigger periodic frame updates.
+        - knee_angle (float): Current knee angle value.
+
+    Methods:
+        - __init__: Initializes VideoData, sets up video analysis, and starts the update timer.
+        - update_frame: Updates the video frame, processes gait analysis, and displays the video.
+        - angle_value(joint: str): Retrieves the current angle value for the specified joint.
+        - toggle_show_lines(value: bool): Toggles the display of lines in the video.
+        - toggle_show_labels(value: bool): Toggles the display of labels in the video.
+        - toggle_show_bbox(value: bool): Toggles the display of bounding boxes in the video.
+    """
+
     def __init__(self):
         super(VideoData, self).__init__()
         self.window_name = "Gait Analysis"
@@ -101,6 +190,11 @@ class VideoData(QLabel):
 
 
 class GradientFrame(QFrame):
+    """
+    This class manages the gradient color in the graphical user interface (GUI) background.
+    It is responsible for controlling and applying a gradient color scheme to enhance the visual aesthetics of the interface.
+    """
+
     def __init__(self, start_color, end_color):
         super().__init__()
         self.start_color = start_color
@@ -116,17 +210,32 @@ class GradientFrame(QFrame):
 
 
 class MainWindow(QMainWindow):
+    """
+    MainWindow class for the application.
+
+    Attributes:
+    - patient_info (list): Information about the patient.
+    - x_history, y_history, x_history_2, y_history_2 (list): Lists to store angle data for plotting.
+    - x_history2, y_history2, x_history2_2, y_history2_2 (list): Lists to store knee angle data for plotting.
+    - x_history3, y_history3, x_history3_2, y_history3_2 (list): Lists to store ankle angle data for plotting.
+    - gait_phase_duration_RTL (bool): Flag indicating if the right-to-left gait phase duration has been calculated.
+    - gait_phase_duration_LTR (bool): Flag indicating if the left-to-right gait phase duration has been calculated.
+    - min_value_x_RTL, min_value_x_LTR (float): Minimum values of x for right-to-left and left-to-right gait.
+    - time_difference_difference (float): Difference between right-to-left and left-to-right gait phase durations.
+    - time_difference_RTL, time_difference_LTR (float): Gait phase durations for right-to-left and left-to-right.
+    - percent_diff (float): Percentage difference between gait phase durations.
+    """
+
     def __init__(self, patient_info):
+        """
+        Constructor for the MainWindow class.
+
+        Args:
+        - patient_info (list): Information about the patient.
+        """
         super(MainWindow, self).__init__()
 
         self.patient_info = patient_info
-
-        """
-        # GUI to input amputee data
-        self.amputee_data = AmputeeDataInput()
-        self.amputee_data.submit_signal.connect(self.on_submit)
-        self.amputee_data.show()
-        """
 
         # Hip angle
         self.x_history = []
@@ -160,11 +269,29 @@ class MainWindow(QMainWindow):
         self.percent_diff = None
 
     def on_submit(self):
+        """
+        Event handler for the submit action.
+
+        This method is triggered when the user submits the form. It initializes the VideoData widget,
+        sets up the user interface, and displays the main window.
+        """
         self.video_widget = VideoData()
         self.init_ui()
         self.show()
 
     def init_ui(self):
+        """
+        Initialize the user interface of the main window.
+
+        This method sets up the main window layout, menus, and frames, creating a visually appealing interface.
+        It also initializes various graphical elements like plots, labels, and buttons for displaying and interacting
+        with the data related to left and right leg angles, gait deviations, and video information.
+
+        The user interface consists of multiple frames, each serving a specific purpose such as displaying angle plots,
+        presenting patient information, and providing options for correction of gait deviations.
+
+        Additionally, this method sets up timers for updating angle values at regular intervals.
+        """
         WINDOW_HEIGHT = 800
         WINDOW_WIDTH = 1500
 
@@ -468,6 +595,19 @@ class MainWindow(QMainWindow):
         self.timer3.start(int(1000 / 120))
 
     def angle_max_min(self, joint: str, y_history):
+        """
+        Update and display the maximum and minimum angle values for a specific joint.
+
+        Parameters:
+        - joint (str): The joint for which to calculate and display angle statistics (e.g., "Hip", "Knee", "Ankle").
+        - y_history (list): A list of angle values representing the historical data for the specified joint.
+
+        This method calculates the maximum and minimum angle values from the provided historical data
+        and updates the corresponding QLabel elements to display these values in the user interface.
+
+        Note: The method assumes the existence of QLabel elements for displaying max and min values
+        for each joint (e.g., self.max_hip, self.min_hip for the hip joint).
+        """
         max_y = float("-inf")
         min_y = float("inf")
 
@@ -495,12 +635,41 @@ class MainWindow(QMainWindow):
             self.min_ankle.setText(f"Min: {round(min_y, 2)}°")
 
     def gait_phase_line(self, ax, frame):
+        """
+        Draw a dashed vertical line on the specified Axes to indicate a gait phase.
+
+        Parameters:
+        - ax (matplotlib.axes._subplots.AxesSubplot): The Axes on which to draw the gait phase line.
+        - frame (float or None): The frame (time point) where the gait phase occurs. If None, no line is drawn.
+
+        This method adds a vertical dashed line to the specified Axes at the given frame to visually represent a gait phase.
+        The line is drawn using a dashed linestyle with a linewidth of 2.
+
+        Note: Ensure that the provided Axes (ax) is part of the matplotlib Figure where you want to display the line.
+        """
         if frame is not None:
             ax.axvline(frame, linestyle="--", linewidth=2)
 
     def normalize_gait_phases(
         self, ax, line, list_x, list_y, lower_threshold: int, upper_threshold: int
     ):
+        """
+        Normalize gait phases and update the plot with the normalized data.
+
+        Parameters:
+        - ax (matplotlib.axes._subplots.AxesSubplot): The Axes on which to plot the normalized gait phases.
+        - line (matplotlib.lines.Line2D): The Line2D object representing the gait data plot.
+        - list_x (list): List of x-axis values (time points).
+        - list_y (list): List of y-axis values (angle data).
+        - lower_threshold (int): The lower index for the range of data to be considered.
+        - upper_threshold (int): The upper index for the range of data to be considered.
+
+        This method normalizes the gait phases based on the specified range and updates the plot with the normalized data.
+        It calculates the minimum x-value within the specified range and adjusts all x-values accordingly.
+        Additionally, it draws dashed vertical lines on the plot to indicate the start and end of gait phases.
+
+        Note: The provided Axes (ax) and Line2D object (line) should be part of the matplotlib Figure where you want to display the plot.
+        """
         original_list_x = list_x
         original_list_y = list_y
         copied_list_x = copy.deepcopy(original_list_x)
@@ -586,6 +755,16 @@ class MainWindow(QMainWindow):
                     line.set_data(normalized_values_x, copied_list_y)
 
     def gait_duration(self):
+        """
+        Calculate and analyze the difference in gait phase duration between the left and right legs.
+        Display relevant gait deviations and provide corrective actions if necessary.
+
+        This method compares the gait phase duration of the left and right legs, calculates the percentage difference,
+        and identifies potential gait deviations. It updates the UI with information about gait deviations
+        and displays buttons for possible corrective actions.
+
+        Note: The corrective actions mentioned in the UI are placeholders and may need to be adjusted based on actual corrections.
+        """
         if self.time_difference_RTL is None or self.time_difference_LTR is None:
             self.gait_phases_time.setText(f"Analyzing gait deviations...")
 
@@ -596,7 +775,6 @@ class MainWindow(QMainWindow):
             time_difference_difference = (
                 self.time_difference_RTL - self.time_difference_LTR
             )
-            # self.gait_phases_time.setText(f"Stance phase diff: {time_difference_difference: .2f} seconds")
 
             if self.time_difference_RTL > self.time_difference_LTR:
                 self.percent_diff = (
@@ -607,6 +785,12 @@ class MainWindow(QMainWindow):
                 self.vaulting_dev.setText(f"Vaulting")
                 self.socket_align.setText(f"Alinhamento do encaixe")
                 self.foot_flex_dev.setText(f"Flexão do pé")
+
+                """
+                The following gait deviations are not currently being calculated.
+                These deviations are included for testing purposes to demonstrate how they should appear in the user interface. 
+                They will only be displayed when the gait phase duration is calculated.
+                """
 
                 if self.percent_diff > 1:
                     self.vaulting_dev.setStyleSheet("color: green;")
@@ -683,9 +867,35 @@ class MainWindow(QMainWindow):
                 self.vaulting_dev_button.setVisible(False)
 
     def update_angle_values(self, angle: str):
+        """
+        Update the real-time display of joint angles during video playback.
+
+        Parameters:
+        - angle (str): The joint angle to be updated (e.g., "Hip", "Knee", "Ankle").
+
+        This method is responsible for updating the real-time display of joint angles during video playback.
+        It retrieves the current frame and corresponding joint angle from the video widget, records historical data,
+        normalizes gait phases, and updates the UI with the current joint angle. The visualization is handled separately
+        for different joint angles and directions of movement.
+
+        Note: The method assumes the existence of specific UI elements such as labels, axes, lines, and canvases,
+        which need to be present in the class for proper execution.
+        """
+
+        """
+        Set lower and upper thresholds for gait phase normalization.
+
+        Parameters:
+        - lower_threshold (int): The lower threshold for gait phase normalization.
+        - upper_threshold (int): The upper threshold for gait phase normalization.
+
+        This block of code initializes the lower and upper thresholds used for gait phase normalization.
+        These thresholds determine the range of frames considered for gait phase analysis.
+        Frames falling outside this range are excluded from the analysis to ensure accurate gait phase identification.
+        The thresholds are typically defined based on the specific requirements of the gait analysis algorithm.
+        """
         lower_threshold = 5
         upper_threshold = -5
-        # ? x = current_frame / fps (fps in this case is 120)
         x = self.video_widget.current_frame / self.video_widget.init_video.fps_rate
         self.gait_duration()
 
@@ -827,15 +1037,50 @@ class MainWindow(QMainWindow):
             self.ankle_angle_label.setText(f"Current ankle angle: {round(y, 2)}°")
 
     def view_lines_action_triggered(self, checked):
+        """
+        Toggle visibility of lines in the video.
+
+        Parameters:
+        - checked (bool): The status of the action (True if checked, False otherwise).
+
+        This method is triggered when the user selects or deselects the option to show lines in the video.
+        It toggles the visibility of lines based on the provided 'checked' parameter.
+        """
         self.video_widget.toggle_show_lines(not checked)
 
     def view_labels_action_triggered(self, checked):
+        """
+        Toggle visibility of labels in the video.
+
+        Parameters:
+        - checked (bool): The status of the action (True if checked, False otherwise).
+
+        This method is triggered when the user selects or deselects the option to show labels in the video.
+        It toggles the visibility of labels based on the provided 'checked' parameter.
+        """
         self.video_widget.toggle_show_labels(not checked)
 
     def view_bbox_action_triggered(self, checked):
+        """
+        Toggle visibility of bounding boxes in the video.
+
+        Parameters:
+        - checked (bool): The status of the action (True if checked, False otherwise).
+
+        This method is triggered when the user selects or deselects the option to show bounding boxes in the video.
+        It toggles the visibility of bounding boxes based on the provided 'checked' parameter.
+        """
         self.video_widget.toggle_show_bbox(not checked)
 
     def open_save_dialog(self):
+        """
+        Open a dialog for adding comments and saving the analysis as a PDF.
+
+        This method creates a dialog window with a text edit field for adding comments and a button to save the analysis as a PDF.
+        The user can input comments in the text edit field, and clicking the 'Save PDF' button triggers the PDF generation process.
+
+        Note: The PdfGen class is assumed to be used for generating PDFs based on the provided amputee data.
+        """
         results_pdf = PdfGen(
             self.amputee_data.name,
             self.amputee_data.amputation_level,
@@ -861,12 +1106,37 @@ class MainWindow(QMainWindow):
         dialog.exec_()
 
     def correction_window(self, label_text):
+        """
+        Open a correction information window.
+
+        This method creates and opens a window to display information related to corrections.
+        The window typically contains details or instructions for correcting specific aspects based on gait analysis.
+
+        Parameters:
+            label_text (str): The text or information to be displayed in the correction window.
+        """
         info_window = InfoWindow(label_text)
         info_window.exec_()
 
 
 class InfoWindow(QDialog):
+    """
+    InfoWindow class creates a dialog window to display correction information.
+
+    Attributes:
+        - label_text (str): Text content to be displayed in the InfoWindow.
+
+    Methods:
+        - __init__: Initializes the InfoWindow, setting up the window title, geometry, and content.
+    """
+
     def __init__(self, label_text):
+        """
+        Initializes the InfoWindow.
+
+        Parameters:
+            - label_text (str): Text content to be displayed in the InfoWindow.
+        """
         super().__init__()
 
         self.setWindowTitle("Info Window")

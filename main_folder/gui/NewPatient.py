@@ -1,3 +1,25 @@
+"""
+NewPatient GUI Module
+
+This module defines a PyQt5-based graphical user interface (GUI) for adding new patient information.
+It includes input fields for name, age, amputation level, amputated limb, phone number, address, zip code, and district.
+
+Dependencies:
+- PyQt5.QtWidgets: For creating the graphical user interface.
+- gui.conn_to_db: Module providing a function for connecting to a database.
+
+Classes:
+- NewPatient: A QDialog class for entering and adding new patient information.
+
+Usage:
+- Instantiate the NewPatient class to display the GUI for adding a new patient.
+- Users can input the patient's information and click the "Add patient" button to add the information to the database.
+- The script connects to a PostgreSQL database using the connect_to_database function from gui.conn_to_db module.
+- Successfully added patients result in an information QMessageBox, while errors are shown in a critical QMessageBox.
+
+Note: Ensure the necessary dependencies are installed before running the script.
+"""
+
 from gui.conn_to_db import connect_to_database
 from PyQt5.QtWidgets import (
     QComboBox,
@@ -13,12 +35,18 @@ from PyQt5.QtWidgets import (
 
 class NewPatient(QDialog):
     def __init__(self):
+        """
+        Initialize NewPatient GUI.
+        """
         super().__init__()
 
         self.conn, self.cursor = connect_to_database()
         self.initUI()
 
     def initUI(self):
+        """
+        Set up the GUI layout and components.
+        """
         self.setWindowTitle("Patient Information")
         self.setFixedSize(400, 500)
 
@@ -101,6 +129,9 @@ class NewPatient(QDialog):
         self.setLayout(layout)
 
     def info_to_db(self):
+        """
+        Add the entered patient information to the database.
+        """
         try:
             insert_query = "INSERT INTO patient \
                             (name, age, amputation_level, amputated_limb, phone, address, zip_code, district) \

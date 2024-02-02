@@ -1,3 +1,27 @@
+"""
+PixelToCentimeter Class
+
+This class defines a PixelToCentimeter object for calibrating pixel-to-centimeter conversion in a video stream using user-drawn lines.
+
+Dependencies:
+- cv2: OpenCV library for computer vision.
+- math: Python standard library for mathematical operations.
+
+Attributes:
+- camera_index: Index of the camera to be used for video capture (default is 0).
+- camera: VideoCapture object for accessing the camera feed.
+- start_point_horizontal, end_point_horizontal: Points defining the horizontal calibration line.
+- clicked_horizontal: Flag indicating whether the horizontal line is being clicked.
+- draw_horizontal_line: Flag indicating whether to draw the horizontal calibration line.
+- start_point_vertical, end_point_vertical: Points defining the vertical calibration line.
+- clicked_vertical: Flag indicating whether the vertical line is being clicked.
+- draw_vertical_line: Flag indicating whether to draw the vertical calibration line.
+- frame_with_line: Copy of the frame with drawn calibration lines.
+- pixel_to_cm_horizontal, pixel_to_cm_vertical: Pixel-to-centimeter conversion factors for horizontal and vertical lines.
+
+Note: Integration with PyQt5 GUI is needed for better interaction and visualization.
+"""
+
 import math
 
 import cv2
@@ -5,6 +29,12 @@ import cv2
 
 class PixelToCentimeter:
     def __init__(self, camera_index=0):
+        """
+        Initializes the PixelToCentimeter object.
+
+        Parameters:
+        - camera_index (int): Index of the camera to be used for video capture (default is 0).
+        """
         self.camera = cv2.VideoCapture(camera_index)
         if not self.camera.isOpened():
             print("Error: Could not open video.")
@@ -30,6 +60,9 @@ class PixelToCentimeter:
     def draw_line_on_frame(
         self, frame, start_point, end_point, line_length, display=True
     ):
+        """
+        Draws a calibration line on the frame and displays its length in centimeters.
+        """
         if display:
             cv2.line(frame, start_point, end_point, (0, 255, 0), 2)
             cv2.putText(
@@ -43,6 +76,9 @@ class PixelToCentimeter:
             )
 
     def handle_mouse_event(self, event, x, y, flags, param):
+        """
+        Handles mouse events for defining calibration lines.
+        """
         if event == cv2.EVENT_LBUTTONDOWN:  # Click left button
             if self.clicked_horizontal:
                 self.end_point_horizontal = (x, y)
@@ -60,6 +96,9 @@ class PixelToCentimeter:
                 self.clicked_vertical = True
 
     def run(self):
+        """
+        Runs the calibration process, allowing the user to draw horizontal and vertical lines.
+        """
         while True:
             ret, frame = self.camera.read()
 
@@ -132,9 +171,15 @@ class PixelToCentimeter:
         cv2.destroyAllWindows()
 
     def get_pixel_to_cm_conversion_horizontal(self):
+        """
+        Returns the pixel-to-centimeter conversion factor for horizontal calibration.
+        """
         return self.pixel_to_cm_horizontal
 
     def get_pixel_to_cm_conversion_vertical(self):
+        """
+        Returns the pixel-to-centimeter conversion factor for vertical calibration.
+        """
         return self.pixel_to_cm_vertical
 
 

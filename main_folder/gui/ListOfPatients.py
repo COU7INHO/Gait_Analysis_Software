@@ -1,3 +1,27 @@
+"""
+ListOfPatients GUI Module
+
+This module defines a PyQt5-based graphical user interface (GUI) for displaying and filtering a list of patients.
+It includes functionality for filtering patients based on name and district, displaying patient details, and updating the displayed data.
+
+Dependencies:
+- psycopg2: For PostgreSQL database interaction.
+- PyQt5.QtCore: For Qt core functionality.
+- PyQt5.QtWidgets: For creating the graphical user interface.
+
+Classes:
+- ListOfPatients: A QDialog class for displaying and filtering a list of patients.
+
+Usage:
+- Instantiate the ListOfPatients class to display the patient list GUI.
+- Users can filter patients by entering text in the "Name" and "District" fields and clicking the "Filter" button.
+- The GUI includes a table displaying patient information with a "Details" button for each patient.
+- Clicking the "Details" button opens a PatientDetails window with additional patient information.
+- The script connects to a PostgreSQL database using psycopg2 and updates the displayed data based on user interactions.
+
+Note: Ensure the necessary dependencies are installed before running the script.
+"""
+
 import psycopg2
 from gui.conn_to_db import connect_to_database
 from gui.PatientDetails import PatientDetails
@@ -17,10 +41,13 @@ from PyQt5.QtWidgets import (
 
 class ListOfPatients(QDialog):
     def __init__(self):
+        """
+        Initialize ListOfPatients GUI.
+        """
         super().__init__()
 
         self.setWindowTitle("Patient Information")
-        self.setFixedSize(600, 600)
+        self.setFixedSize(560, 450)
 
         self.conn, self.cur = connect_to_database()
 
@@ -54,9 +81,12 @@ class ListOfPatients(QDialog):
         self.setLayout(layout)
 
     def filter_patient(self):
+        """
+        Filter patients based on user-entered criteria.
+        """
         name_filter = self.name_filter.text()
         district_filter = self.district_filter.text()
-        query = "SELECT name, amputation_level, district FROM patient WHERE name LIKE %s AND district LIKE %s;"
+        query = "SELECT name, amputation_level, district FROM patient WHERE name LIKE %s AND district LIKE %s ORDER by name;"
 
         try:
             self.cur.execute(
@@ -68,6 +98,9 @@ class ListOfPatients(QDialog):
             print("Error executing SQL query:", e)
 
     def display_data(self):
+        """
+        Display patient information in the table.
+        """
         query = "SELECT name, amputation_level, district FROM patient ORDER BY name;"
 
         self.cur.execute(query)
@@ -101,10 +134,16 @@ class ListOfPatients(QDialog):
             btn.setFocusPolicy(Qt.NoFocus)
 
     def update_after_delete(self):
+        """
+        Update the table after deleting a patient.
+        """
         self.tableWidget.clearContents()
         self.display_data()
 
     def update_table_widget(self, rows):
+        """
+        Update the table widget with new data.
+        """
         self.tableWidget.setRowCount(len(rows))
 
         for i, row in enumerate(rows):
@@ -118,6 +157,11 @@ class ListOfPatients(QDialog):
             self.tableWidget.setColumnWidth(len(row), 100)  # Adjust button column width
 
     def show_details_window(self, index):
+        """
+        Show the details window for a selected patient.
+        """
+        self.close()
+
         name = self.tableWidget.item(index, 0).text()
 
         try:

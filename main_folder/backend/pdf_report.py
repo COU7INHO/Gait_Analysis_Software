@@ -1,3 +1,7 @@
+"""
+This script is not being used yet and it's not functional yet 
+"""
+
 from PyQt5.QtWidgets import QFileDialog
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
