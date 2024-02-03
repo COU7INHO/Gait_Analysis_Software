@@ -14,6 +14,23 @@ Functions:
 Usage:
 - Call the connect_to_database function to obtain a connection and cursor to the PostgreSQL database.
 - Ensure the necessary dependencies are installed before using this script.
+
+--------
+
+Query to create PostgreSQL patient's table:
+
+CREATE TABLE patient_data (
+    id SERIAL PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    age INTEGER NOT NULL,
+    amputation_level VARCHAR(50) NOT NULL,
+    amputated_limb VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    zip_code VARCHAR(10) NOT NULL,
+    district VARCHAR(50) NOT NULL
+);
+
 """
 
 import psycopg2
