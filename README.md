@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project aims to facilitate gait analysis for individuals with lower limb amputations. The primary objective is to detect gait deviations and provide solutions for correction. The software is designed with a user-friendly interface, making it accessible for healthcare professionals and researchers involved in the analysis of biomechanics during walking.
+This project aims to facilitate gait analysis for individuals with lower limb amputations. The primary objective is to detect gait deviations and provide solutions for correction. The software is designed with a user-friendly interface, making it accessible for healthcare professionals involved in the analysis of biomechanics during walking.
 
 ## Features
 
@@ -30,12 +30,14 @@ CREATE TABLE patient (
     address VARCHAR(255) NOT NULL,
     zip_code VARCHAR(10) NOT NULL,
     district VARCHAR(50) NOT NULL
-);```
+);
+```
 
 ### Github Repository
 
 ```bash
-git clone https://github.com/COU7INHO/Gait_Analysis_Software.git```
+git clone https://github.com/COU7INHO/Gait_Analysis_Software.git
+```
 
 ### Warning
 Due to computing limitations, the video analysis may run at a very low FPS rate. Please be aware of potential performance issues and consider running the software on a system with sufficient computational resources.
