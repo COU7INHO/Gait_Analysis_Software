@@ -19,7 +19,7 @@ Usage:
 
 Query to create PostgreSQL patient's table:
 
-CREATE TABLE patient_data (
+CREATE TABLE patient (
     id SERIAL PRIMARY KEY NOT NULL,
     name VARCHAR(255) NOT NULL,
     age INTEGER NOT NULL,
