@@ -1,4 +1,4 @@
-# Lower Limb Amputee Gait Analysis Software
+# Gait Analysis Software
 
 ## Overview
 
@@ -19,6 +19,32 @@ Check your Python version by running the script:
 ```bash
 python --version
 ```
+
+## Object Detection 
+
+### Object Detection Model
+The object detection model used in this project was initially trained with [YOLOv3](https://github.com/ultralytics/yolov3). Please note that since the time of the initial training, more efficient versions of the YOLO algorithm have been developed, which may offer improved performance.
+
+## Training Object and Anatomical Points
+
+The object used for training the object detection model is a specific yellow marker. During data collection, it is essential to place this marker at specific anatomical points to ensure accurate detection. The marker should be visible during the majority of the gait sequence.
+
+### Anatomical Points:
+
+1. **Acromium:** Place the yellow marker at the acromium, ensuring it is clearly visible.
+
+2. **Femur:** Position the marker at the femur, maintaining visibility throughout the gait.
+
+3. **Femur Lateral Epicondyle:** Ensure the marker is placed at the lateral epicondyle of the femur for accurate detection.
+
+4. **Tibial Lateral Malleolus vs Metatarsal:** The marker should be visible at the tibial lateral malleolus and the metatarsal region simultaneously.
+
+### Placement Guidelines:
+
+- Carefully position the yellow marker at each anatomical point during data collection.
+- Ensure that the marker remains visible for the majority of the gait sequence to facilitate accurate object detection.
+
+These specific placements are crucial for training and evaluating the model's performance. Adjust the camera angle and placement as needed to achieve optimal visibility of the yellow marker at the specified anatomical points.
 
 ## Clone the Github repository
 ```bash
