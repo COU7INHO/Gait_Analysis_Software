@@ -34,12 +34,13 @@ CREATE TABLE patient (
 """
 
 import psycopg2
+from psycopg2 import sql
 from PyQt5.QtWidgets import QMessageBox
 
 
 def connect_to_database():
     """
-    Establish a connection to the PostgreSQL database.
+    Establish a connection to the PostgreSQL database and create the 'patient' table if it doesn't exist.
 
     Returns:
     - conn (psycopg2.extensions.connection): PostgreSQL database connection object.
@@ -52,6 +53,31 @@ def connect_to_database():
             password="admin",
         )
         cur = conn.cursor()
+
+        # Check if the 'patient' table exists
+        cur.execute(
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'patient');"
+        )
+        table_exists = cur.fetchone()[0]
+
+        # If the 'patient' table doesn't exist, create it
+        if not table_exists:
+            create_table_query = """
+                CREATE TABLE patient (
+                    id SERIAL PRIMARY KEY NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    age INTEGER NOT NULL,
+                    amputation_level VARCHAR(50) NOT NULL,
+                    amputated_limb VARCHAR(50) NOT NULL,
+                    phone VARCHAR(20) NOT NULL,
+                    address VARCHAR(255) NOT NULL,
+                    zip_code VARCHAR(10) NOT NULL,
+                    district VARCHAR(50) NOT NULL
+                );
+            """
+            cur.execute(create_table_query)
+            conn.commit()
+
         return conn, cur
 
     except psycopg2.Error as e:

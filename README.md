@@ -12,32 +12,27 @@ This project aims to facilitate gait analysis for individuals with lower limb am
 
 ## Getting Started
 
-### Prerequisites
+## Python 
+This code was developed and tested using Python 3.8.10. While it may work with other Python 3 versions, it is recommended to use Python 3.8.10 for optimal compatibility.
 
-- Python 3.8.10
-- Required Python packages (specified in requirements.txt)
-
-Before running the script, ensure that you have PostgreSQL installed on your system. Additionally, create the following table in your PostgreSQL database to store patient data:
-
-```sql
-CREATE TABLE patient (
-    id SERIAL PRIMARY KEY NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    age INTEGER NOT NULL,
-    amputation_level VARCHAR(50) NOT NULL,
-    amputated_limb VARCHAR(50) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    address VARCHAR(255) NOT NULL,
-    zip_code VARCHAR(10) NOT NULL,
-    district VARCHAR(50) NOT NULL
-);
+Check your Python version by running the script:
+```bash
+python --version
 ```
 
-### Github Repository
-
+## Clone the Github repository
 ```bash
 git clone https://github.com/COU7INHO/Gait_Analysis_Software.git
 ```
+
+## Install the requirements
+To install the requirements run the command:
+```bash
+pip install -r requirements.txt
+```
+
+### Database setup
+As the database is running locally, when you run the script for the first time, the database will be empty. To test the software effectively, make sure to create some data, patients, in the database.
 
 ### Warning
 Due to computing limitations, the video analysis may run at a very low FPS rate. Please be aware of potential performance issues and consider running the software on a system with sufficient computational resources.
